@@ -63,7 +63,7 @@ function GET_CONTAINER_CMD() {
     echo $CONTAINER_CMD
 }
 
-[[ -z "${CONTAINER_CMD}" ]] && CONTAINER_CMD=$(GET_CONTAINER_CMD)
+[[ -z "${CONTAINER_CMD}" ]] && CONTAINER_CMD=docker
 
 EXTRA_ARGS=$@
 
@@ -72,7 +72,7 @@ if [[ "$FORMAT" == "docker" ]]; then
         EXTRA_ARGS="$EXTRA_ARGS --gpus all"
     fi
 
-    $CONTAINER_CMD run -it --rm  -p $PORT:$PORT -e SHELL="/bin/bash" --network=host $EXTRA_ARGS dasf:$TYPE python3 -m jupyterlab --allow-root --ServerApp.port $PORT --no-browser --ServerApp.ip='0.0.0.0'
+    $CONTAINER_CMD run -it --rm  -p $PORT:$PORT -e SHELL="/bin/bash" --user=$(id -u):$(id -g)   $EXTRA_ARGS dasf:$TYPE python3 -m jupyterlab --allow-root --ServerApp.port $PORT --no-browser --ServerApp.ip='0.0.0.0'
 elif [[ "$FORMAT" == "singularity" ]]; then
     if [[ "$TYPE" == "gpu" ]]; then
         EXTRA_ARGS="$EXTRA_ARGS --nv"

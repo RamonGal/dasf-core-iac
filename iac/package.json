@@ -1,0 +1,18 @@
+{
+    "name": "dasf-iac",
+    "main": "index.ts",
+    "scripts": {
+        "preview": "vite preview",
+        "watch": "onchange '**.ts' -- prettier --config .prettierrc --write {{changed}}"
+    
+    },
+    "devDependencies": {
+        "@types/node": "^16",
+        "nodemon": "^3.0.1", 
+        "prettier": "3.0"
+    },
+    "dependencies": {
+        "@pulumi/kubernetes": "^4.0.0",
+        "@pulumi/pulumi": "^3.0.0"
+    }
+}

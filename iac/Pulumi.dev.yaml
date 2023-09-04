@@ -1,0 +1,8 @@
+config:
+  dasf-iac:replicas: 2
+  dasf-iac:namespace: 'default' 
+  dasf-iac:portScheduler: 8786
+  dasf-iac:portWorker: 8787  
+  dasf-iac:portDasf: 8788
+  dasf-iac:dasfImage: dasf:cpu
+  dasf-iac:kubeconfig: 'false'

@@ -129,7 +129,7 @@ function GET_CONTAINER_CMD() {
     echo $CONTAINER_CMD
 }
 
-[[ -z "${CONTAINER_CMD}" ]] && CONTAINER_CMD=$(GET_CONTAINER_CMD)
+[[ -z "${CONTAINER_CMD}" ]] && CONTAINER_CMD=docker
 
 function FIND_CMD() {
     if ! command -v $1 &> /dev/null
