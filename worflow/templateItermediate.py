@@ -40,6 +40,13 @@ def create_argo_pipeline(dag, image, retry, input_param, output_param):
                 "parameters": [
                     {"name": key, "value": value} for key, value in input_param.items()
                 ]
+                + [
+                    {
+                        "name": f"output_from_{dep}",
+                        "valueFrom": {"parameter": f"{dep}.outputs.parameters.output1"},
+                    }
+                    for dep in dependencies
+                ]
             },
             outputs={
                 "parameters": [
@@ -48,25 +55,45 @@ def create_argo_pipeline(dag, image, retry, input_param, output_param):
                 ]
             },
             retry_strategy={"limit": retry},
-            dag={"tasks": [{"name": dep, "template": dep} for dep in dependencies]},
         )
         templates.append(template)
 
     # Create the workflow spec
-    workflow_spec = V1alpha1WorkflowSpec(entrypoint="main", templates=templates)
+    workflow_spec = V1alpha1WorkflowSpec(
+        entrypoint="main",
+        templates=templates,
+    )
 
     # Create the main workflow template (DAG template)
     dag_template = V1alpha1DAGTemplate(
         tasks=[
-            {"name": key, "template": key, "dependencies": val}
+            {
+                "name": key,
+                "template": key,
+                "dependencies": val,
+                "arguments": {
+                    "parameters": [
+                        {
+                            "name": f"output_from_{dep}",
+                            "value": f"{{{dep}.outputs.parameters.output1}}",
+                        }
+                        for dep in val
+                    ]
+                },
+            }
             for key, val in dag.items()
         ]
     )
 
     # Create the workflow object
     workflow = V1alpha1Workflow(
-        metadata={"generateName": "argo-dag-workflow-"}, spec=workflow_spec
+        metadata={"generateName": "argo-dag-workflow-"},
+        spec=workflow_spec,
     )
+
+    # Set the DAG template as the entrypoint template
+    workflow.spec.entrypoint = "main"
+    workflow.spec.templates = [V1alpha1Template(name="main", dag=dag_template)]
 
     # Submit the workflow to the Argo server
     config = Configuration()
@@ -79,7 +106,11 @@ def create_argo_pipeline(dag, image, retry, input_param, output_param):
 
 
 # Example usage
-dag = {"task1": [], "task2": ["task1"], "task3": ["task1", "task2"]}
+dag = {
+    "task1": [],
+    "task2": ["task1"],
+    "task3": ["task1", "task2"],
+}
 image = "my-docker-image:latest"
 retry = 3
 input_param = {"param1": "value1"}
