@@ -18,8 +18,8 @@ if (kubeconfig !== 'false') {
 }
 
 // Create a dask gateway
-const gateway = newGateway({ namespace: namespace, provider: provider });
-export const gatewayLoadBalancerIp = gateway.loadBalancerIp;
+// const gateway = newGateway({ namespace: namespace, provider: provider });
+// export const gatewayLoadBalancerIp = gateway.loadBalancerIp;
 
 // Create an argo controller
 const argoController = newArgoController({

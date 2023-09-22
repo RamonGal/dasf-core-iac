@@ -12,7 +12,7 @@ export const newArgoController = (args: NewArgoControllerArgs) => {
     {
       repo: 'argo',
       chart: 'argo-cd',
-      version: '2.4.9',
+      version: '5.35.0',
       transformations: [
         (obj: any) => {
           if (obj.metadata) {
