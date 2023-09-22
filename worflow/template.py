@@ -1,35 +1,31 @@
-from argo.workflows.client import (
-    V1alpha1Workflow,
-    V1alpha1WorkflowSpec,
-    V1alpha1DAGTemplate,
-    V1alpha1Template,
-    ApiClient,
-    Configuration,
-    WorkflowServiceApi,
+from pprint import pprint
+
+from argo_workflows import Configuration, ApiClient
+from argo_workflows.api.workflow_service_api import WorkflowServiceApi
+from argo_workflows.model.io_argoproj_workflow_v1alpha1_workflow import (
+    IoArgoprojWorkflowV1alpha1Workflow,
+)
+from argo_workflows.model.io_argoproj_workflow_v1alpha1_workflow_spec import (
+    IoArgoprojWorkflowV1alpha1WorkflowSpec,
+)
+from argo_workflows.model.io_argoproj_workflow_v1alpha1_template import (
+    IoArgoprojWorkflowV1alpha1Template,
+)
+from argo_workflows.model.io_argoproj_workflow_v1alpha1_dag_template import (
+    IoArgoprojWorkflowV1alpha1DAGTemplate,
 )
 
 
 def create_argo_pipeline(dag, image, retry, input_param, output_param):
     """
     Create an Argo pipeline using the provided parameters.
-
-    Args:
-        dag (dict): A dictionary representing the DAG of tasks. Keys are task names, values are lists of dependencies.
-        image (str): The docker image to be used in each step of the workflow.
-        retry (int): The number of retry attempts for each step.
-        input_param (dict): A dictionary representing the input parameters for the workflow.
-        output_param (dict): A dictionary representing the output parameters for the workflow.
-
-    Returns:
-        V1alpha1Workflow: A workflow object representing the created Argo workflow.
     """
 
-    # Initialize workflow templates list
     templates = []
 
     # Create a template for each task in the DAG
     for task_name, dependencies in dag.items():
-        template = V1alpha1Template(
+        template = IoArgoprojWorkflowV1alpha1Template(
             name=task_name,
             container={
                 "image": image,
@@ -40,6 +36,13 @@ def create_argo_pipeline(dag, image, retry, input_param, output_param):
                 "parameters": [
                     {"name": key, "value": value} for key, value in input_param.items()
                 ]
+                + [
+                    {
+                        "name": f"output_from_{dep}",
+                        "valueFrom": {"parameter": f"{dep}.outputs.parameters.output1"},
+                    }
+                    for dep in dependencies
+                ]
             },
             outputs={
                 "parameters": [
@@ -48,29 +51,43 @@ def create_argo_pipeline(dag, image, retry, input_param, output_param):
                 ]
             },
             retry_strategy={"limit": retry},
-            dag={"tasks": [{"name": dep, "template": dep} for dep in dependencies]},
         )
         templates.append(template)
 
-    # Create the workflow spec
-    workflow_spec = V1alpha1WorkflowSpec(entrypoint="main", templates=templates)
-
-    # Create the main workflow template (DAG template)
-    dag_template = V1alpha1DAGTemplate(
+    dag_template = IoArgoprojWorkflowV1alpha1DAGTemplate(
         tasks=[
-            {"name": key, "template": key, "dependencies": val}
+            {
+                "name": key,
+                "template": key,
+                "dependencies": val,
+                "arguments": {
+                    "parameters": [
+                        {
+                            "name": f"output_from_{dep}",
+                            "value": f"{{{dep}.outputs.parameters.output1}}",
+                        }
+                        for dep in val
+                    ]
+                },
+            }
             for key, val in dag.items()
         ]
     )
 
-    # Create the workflow object
-    workflow = V1alpha1Workflow(
-        metadata={"generateName": "argo-dag-workflow-"}, spec=workflow_spec
+    templates.append(IoArgoprojWorkflowV1alpha1Template(name="main", dag=dag_template))
+
+    workflow_spec = IoArgoprojWorkflowV1alpha1WorkflowSpec(
+        entrypoint="main",
+        templates=templates,
+    )
+
+    workflow = IoArgoprojWorkflowV1alpha1Workflow(
+        metadata={"generateName": "argo-dag-workflow-"},
+        spec=workflow_spec,
     )
 
     # Submit the workflow to the Argo server
-    config = Configuration()
-    config.host = "http://argo-server:2746"
+    config = Configuration(host="http://argo-server:2746")
     with ApiClient(config) as api_client:
         api_instance = WorkflowServiceApi(api_client)
         created_workflow = api_instance.create_workflow("argo", workflow)
@@ -79,7 +96,11 @@ def create_argo_pipeline(dag, image, retry, input_param, output_param):
 
 
 # Example usage
-dag = {"task1": [], "task2": ["task1"], "task3": ["task1", "task2"]}
+dag = {
+    "task1": [],
+    "task2": ["task1"],
+    "task3": ["task1", "task2"],
+}
 image = "my-docker-image:latest"
 retry = 3
 input_param = {"param1": "value1"}

@@ -1,73 +1,47 @@
 import * as k8s from '@pulumi/kubernetes';
-import { newDeployment } from './deployment';
-import { newService } from './service';
+import * as pulumi from '@pulumi/pulumi';
 
 interface clusterConfig {
   namespace: string;
   replicas: number;
-  portScheduler: number;
-  portWorker: number;
-  portDasf: number;
-  dasfImage: string;
+  releaseName: string;
   provider?: k8s.Provider;
 }
 
-export const createDaskCluster = (
-  clusterConfig: clusterConfig
-): k8s.apps.v1.Deployment[] => {
+export const createDaskCluster = (config: clusterConfig) => {
   // Create a scheduler
-  const scheduler = newDeployment({
-    name: 'dask-scheduler',
-    image: 'ghcr.io/dask/dask',
-    appLabels: { app: 'dask-scheduler' },
-    port: clusterConfig.portScheduler,
-    command: ['dask-scheduler'],
-    namespace: clusterConfig.namespace,
-    provider: clusterConfig.provider
-  });
 
-  // create workers
-  const workers: k8s.apps.v1.Deployment[] = [];
-  for (let i = 0; i < clusterConfig.replicas; i++) {
-    const w = newDeployment({
-      name: `dask-worker-${i}`,
-      namespace: clusterConfig.namespace,
-      image: 'ghcr.io/dask/dask',
-      appLabels: { app: `dask-worker-${i}` },
-      port: clusterConfig.portWorker,
-      command: ['dask-worker', `dask-scheduler:${clusterConfig.portWorker}`]
-    });
-    workers.push(w);
-  }
+  const namespaceArgs: k8s.core.v1.NamespaceArgs = {};
+  const namespaceOpts: pulumi.CustomResourceOptions = config.provider
+    ? { provider: config.provider }
+    : {};
 
-  // create dasf notebook
-  const dasf = newDeployment({
-    name: 'dasf-notebook',
-    appLabels: { app: 'dasf-notebook' },
-    namespace: clusterConfig.namespace,
-    args: [
-      'python3',
-      '-m',
-      'jupyterlab',
-      '--allow-root',
-      '--ServerApp.port',
-      String(clusterConfig.portDasf),
-      '--no-browser',
-      "--ServerApp.ip='0.0.0.0'"
-    ],
-    port: clusterConfig.portDasf,
-    env: [{ name: 'SHELL', value: '/bin/bash' }],
-    image: clusterConfig.dasfImage
-  });
+  const namespace = new k8s.core.v1.Namespace(
+    config.namespace,
+    namespaceArgs,
+    namespaceOpts
+  );
 
-  // create service for notebook
-  const dasfService = newService({
-    namespace: clusterConfig.namespace,
-    labels: { app: 'dasf-notebook' },
-    port: clusterConfig.portDasf,
-    targetPort: clusterConfig.portDasf,
-    protocol: 'TCP'
-  });
+  const chartArgs = {
+    chart: 'dask',
+    fetchOpts: {
+      repo: 'https://helm.dask.org'
+    },
+    values: {
+      worker: {
+        replicaCount: config.replicas
+      }
+    },
+    namespace: namespace.metadata.name
+  };
+  const chartOpts: pulumi.ComponentResourceOptions = config.provider
+    ? { provider: config.provider }
+    : {};
 
-  return [scheduler, ...workers, dasf];
+  const daskClusterChart = new k8s.helm.v3.Chart(
+    config.releaseName 
+    , chartArgs, chartOpts);
+  return {
+    namespace: namespace.metadata.name
+  };
 };

@@ -1,10 +1,11 @@
 import { newGateway } from './daskGateway';
-import { newArgoController } from './argoController';
+import { createDaskCluster } from './daskCluster';
 import * as k8s from '@pulumi/kubernetes';
 import * as pulumi from '@pulumi/pulumi';
 
 const config = new pulumi.Config();
-const namespace = config.require('namespace');
+const namespaceArgo = config.require('namespaceArgo');
+const namespaceGateway = config.require('namespaceGateway');
 const kubeconfig = config.require('kubeconfig');
 
 // define the k8s provider
@@ -17,13 +18,22 @@ if (kubeconfig !== 'false') {
   provider = undefined;
 }
 
-// Create a dask gateway
-// const gateway = newGateway({ namespace: namespace, provider: provider });
-// export const gatewayLoadBalancerIp = gateway.loadBalancerIp;
+// export const gateway = newGateway({
+//   namespace: namespaceGateway,
+//   provider: provider
+// });
 
 // Create an argo controller
-const argoController = newArgoController({
-  namespace: namespace,
+// export const argoController = newArgoController({
+//   namespace: namespaceArgo,
+//   port: 2746,
+//   provider: provider,
+//   portForward: true
+// });
+
+export const cluster = createDaskCluster({
+  namespace: 'dask-cluster',
+  replicas: 2,
+  releaseName: 'dask-cluster',
   provider: provider
 });
-export const argoControllerLoadBalancerIp = argoController;

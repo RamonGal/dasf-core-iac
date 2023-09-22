@@ -19,11 +19,11 @@ export const newGateway = (config: gatewayConfig) => {
   );
 
   const chartArgs = {
-    chart: config.namespace,
+    chart: 'dask-gateway',
     fetchOpts: {
       repo: 'https://helm.dask.org'
     },
-    namespace: config.namespace
+    namespace: namespace.metadata.name, 
   };
   const chartOpts: pulumi.ComponentResourceOptions = config.provider
     ? { provider: config.provider }
@@ -34,17 +34,7 @@ export const newGateway = (config: gatewayConfig) => {
     chartArgs,
     chartOpts
   );
-  const serviceName = pulumi.interpolate`traefik-${config.namespace}-${config.namespace}`;
-  const gatewayService = k8s.core.v1.Service.get(
-    'dask-gateway-service',
-    pulumi.interpolate`${config.namespace}/${serviceName}`
-  );
   return {
-    loadBalancerIp: gatewayService.status.apply(
-      (status) =>
-        status.loadBalancer.ingress[0].ip ||
-        status.loadBalancer.ingress[0].hostname
-    ),
-    ...daskGatewayChart
+    namespace: namespace.metadata.name
   };
 };

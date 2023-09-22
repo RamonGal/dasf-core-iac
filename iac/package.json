@@ -4,7 +4,6 @@
     "scripts": {
         "preview": "vite preview",
         "watch": "onchange '**.ts' -- prettier --config .prettierrc --write {{changed}}"
-    
     },
     "devDependencies": {
         "@types/node": "^16",

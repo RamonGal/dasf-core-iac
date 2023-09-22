@@ -1,30 +1,38 @@
 import * as k8s from '@pulumi/kubernetes';
+import { spawn } from 'child_process';
+import * as pulumi from '@pulumi/pulumi';
 
 interface NewArgoControllerArgs {
   namespace: string;
+  port: number;
+  portForward: boolean;
   provider?: k8s.Provider;
 }
 
 export const newArgoController = (args: NewArgoControllerArgs) => {
-  const opts = args.provider ? { provider: args.provider } : {};
-  const argoCdChart = new k8s.helm.v3.Chart(
-    'argo-cd',
+  // Create a namespace
+  const namespace = new k8s.core.v1.Namespace('argo', {
+    metadata: { name: args.namespace }
+  });
+
+  // Install the Argo Workflows Helm chart
+  const argoChart = new k8s.helm.v3.Chart(
+    'argo',
     {
-      repo: 'argo',
-      chart: 'argo-cd',
-      version: '5.35.0',
-      transformations: [
-        (obj: any) => {
-          if (obj.metadata) {
-            obj.metadata.namespace = args.namespace; // set the namespace
-          }
+      chart: 'argo-workflows',
+      fetchOpts: { repo: 'https://argoproj.github.io/argo-helm' },
+      namespace: namespace.metadata.name,
+      values: {
+        server: {
+          extraArgs: ['--auth-mode=server']
         }
-      ]
+      }
     },
-    opts
+    { dependsOn: [namespace] }
   );
 
-  return argoCdChart
-    .getResourceProperty('v1/Service', 'argo-cd-argo-cd-server', 'status')
-    .apply((status) => status.loadBalancer.ingress[0].ip);
+  // Output the namespace name
+  return {
+    namespace: namespace.metadata.name
+  };
 };
