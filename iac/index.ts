@@ -1,5 +1,6 @@
 import { newGateway } from './daskGateway';
 import { createDaskCluster } from './daskCluster';
+import { newArgoController } from './argoController';
 import * as k8s from '@pulumi/kubernetes';
 import * as pulumi from '@pulumi/pulumi';
 
@@ -24,16 +25,16 @@ if (kubeconfig !== 'false') {
 // });
 
 // Create an argo controller
-// export const argoController = newArgoController({
-//   namespace: namespaceArgo,
-//   port: 2746,
-//   provider: provider,
-//   portForward: true
-// });
-
-export const cluster = createDaskCluster({
-  namespace: 'dask-cluster',
-  replicas: 2,
-  releaseName: 'dask-cluster',
-  provider: provider
+export const argoController = newArgoController({
+  namespace: namespaceArgo,
+  port: 2746,
+  provider: provider,
+  portForward: true
 });
+
+// export const cluster = createDaskCluster({
+//   namespace: 'dask-cluster',
+//   replicas: 2,
+//   releaseName: 'dask-cluster',
+//   provider: provider
+// });

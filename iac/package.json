@@ -3,7 +3,10 @@
     "main": "index.ts",
     "scripts": {
         "preview": "vite preview",
-        "watch": "onchange '**.ts' -- prettier --config .prettierrc --write {{changed}}"
+        "watch": "onchange '**.ts' -- prettier --config .prettierrc --write {{changed}}",
+        "deploy": "pulumi up --yes",
+        "deploy-and-open": "pulumi up --yes && npm run open-argo-port",
+        "open-argo-port": "kubectl -n argo port-forward deployment/argo-argo-workflows-server 2746:2746"
     },
     "devDependencies": {
         "@types/node": "^16",
