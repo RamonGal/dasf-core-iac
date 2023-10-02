@@ -165,6 +165,6 @@ else
     fi
 fi
 
-rm -rf $DOCKERFILE_DIR
+
 
 export PATH=$OLD_PATH

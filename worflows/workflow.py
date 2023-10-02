@@ -1,10 +1,12 @@
 from hera.workflows import DAG, Container, Parameter, Workflow, script
+from hera.auth import ArgoCLITokenGenerator
 from hera.shared import global_config
 
 global_config.host = "http://127.0.0.1:2746"
-global_config.token = (
-    ""  # Copy token value after "Bearer" from the `argo auth token` command
-)
+global_config.token = ""
+# Copy token value after "Bearer" from the `argo auth token` command  and argo cli
+# global_config.token = ArgoCLITokenGenerator
+
 # to enable token, modify the argo server config in the iac
 # remove:
 # values: {
