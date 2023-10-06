@@ -24,9 +24,21 @@ try:
 except ImportError: # pragma: no cover
     pass
 
+try:
+    import numcodecs
+
+    from kvikio.nvcomp_codec import NvCompBatchCodec
+    from kvikio.zarr import GDSStore
+except ImportError: # pragma: no cover
+    pass
+
 from pathlib import Path
 
 from dasf.utils.funcs import human_readable_size
+from dasf.utils.funcs import is_kvikio_supported
+from dasf.utils.funcs import is_gds_supported
+from dasf.utils.funcs import is_kvikio_compat_mode
+from dasf.utils.funcs import is_nvcomp_codec_supported
 from dasf.utils.decorators import task_handler
 from dasf.utils.types import is_array
 from dasf.utils.types import is_dask_array
@@ -452,10 +464,12 @@ class DatasetZarr(Dataset):
                  name: str,
                  download: bool = False,
                  root: str = None,
+                 backend: str = None,
                  chunks=None):
 
         Dataset.__init__(self, name, download, root)
 
+        self._backend = backend
         self._chunks = chunks
 
         self._root_file = root
@@ -482,6 +496,17 @@ class DatasetZarr(Dataset):
             The data (or a Future load object, for `_lazy` operations).
 
         """
+        if (self._backend == "kvikio" and is_kvikio_supported() and
+            (is_gds_supported() or is_kvikio_compat_mode())
+            and is_nvcomp_codec_supported()):
+            store = GDSStore(self._root_file)
+            meta = json.loads(store[".zarray"])
+            meta["compressor"] = NvCompBatchCodec("lz4").get_config()
+            store[".zarray"] = json.dumps(meta).encode()
+
+            array = zarr.open_array(store, meta_array=xp.empty(()))
+            return da.from_zarr(array, chunks=array.chunks).map_blocks(xp.asarray)
+
         return da.from_zarr(self._root_file, chunks=self._chunks).map_blocks(xp.asarray)
 
     def _load(self, xp, **kwargs):
