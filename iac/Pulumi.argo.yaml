@@ -6,4 +6,5 @@ config:
   dasf-iac:portScheduler: "8786"
   dasf-iac:portWorker: "8787"
   dasf-iac:replicas: "2"
+  dasf-iac:operator: false
   kubernetes:context: minikube

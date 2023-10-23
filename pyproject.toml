@@ -51,6 +51,7 @@ torchvision = "*"
 xarray = "*"
 xgboost = "*"
 zarr = "*"
+xpysom-dask = { git = "https://github.com/jcfaracco/xpysom-dask.git@aa6fb025ae473fdbf0f4abb9c40a0272bfefc00b" }
 
 #xpysom = { git = "https://github.com/jcfaracco/xpysom/", branch = "dask2" }
 

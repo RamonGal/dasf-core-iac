@@ -6,7 +6,8 @@
         "watch": "onchange '**.ts' -- prettier --config .prettierrc --write {{changed}}",
         "deploy": "pulumi up --yes",
         "deploy-and-open": "pulumi up --yes && npm run open-argo-port",
-        "open-argo-port": "kubectl -n dasf port-forward deployment/argo-argo-workflows-server 2746:2746"
+        "open-argo-port": "kubectl -n $npm_config_namespace port-forward deployment/argo-argo-workflows-server 2746:2746",
+        "open-dasf-scheduler-port": "kubectl port-forward svc/cluster-scheduler $npm_config_port:$npm_config_port -n $npm_config_namespace"
     },
     "devDependencies": {
         "@types/node": "^16",

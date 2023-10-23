@@ -7,7 +7,7 @@ from typing import Union
 try:
     import rmm
     import cupy as cp
-except ImportError: # pragma: no cover
+except ImportError:  # pragma: no cover
     pass
 
 import networkx as nx
@@ -70,6 +70,7 @@ class DaskPipelineExecutor(Executor):
         gpu_allocator="cupy",
         cluster_kwargs=None,
         client_kwargs=None,
+        cluster=None,
     ):
         self.address = address
         self.port = port
@@ -81,9 +82,14 @@ class DaskPipelineExecutor(Executor):
             client_kwargs = dict()
 
         # If address is not set, consider local
-        local = local or (address is None and "scheduler_file" not in client_kwargs)
-
-        if address:
+        local = local or (
+            address is None
+            and "scheduler_file" not in client_kwargs
+            and cluster is None
+        )
+        if cluster is not None:
+            self.client = Client(cluster)
+        elif address:
             address = f"{setup_dask_protocol()}{address}:{port}"
 
             self.client = Client(address=address)
@@ -95,8 +101,7 @@ class DaskPipelineExecutor(Executor):
                     LocalCUDACluster(**cluster_kwargs), **client_kwargs
                 )
             else:
-                self.client = Client(LocalCluster(**cluster_kwargs),
-                                     **client_kwargs)
+                self.client = Client(LocalCluster(**cluster_kwargs), **client_kwargs)
 
         # Ask workers for GPUs
         if local and not use_gpu:
@@ -114,8 +119,9 @@ class DaskPipelineExecutor(Executor):
                     rmm.reinitialize(managed_memory=True)
                     cp.cuda.set_allocator(rmm.rmm_cupy_allocator)
                 else:
-                    raise Exception(f"'{gpu_allocator}' GPU Memory allocator is not "
-                                    "known")
+                    raise Exception(
+                        f"'{gpu_allocator}' GPU Memory allocator is not " "known"
+                    )
             else:
                 self.dtype = TaskExecutorType.multi_cpu
 
@@ -125,16 +131,18 @@ class DaskPipelineExecutor(Executor):
 
         # Share which is the default backend of a cluster
         if not hasattr(self.client, "backend"):
-            if self.dtype == TaskExecutorType.single_gpu or \
-               self.dtype == TaskExecutorType.multi_gpu:
+            if (
+                self.dtype == TaskExecutorType.single_gpu
+                or self.dtype == TaskExecutorType.multi_gpu
+            ):
                 setattr(self.client, "backend", "cupy")
             else:
                 setattr(self.client, "backend", "numpy")
 
         if profiler == "memusage":
             profiler_dir = os.path.abspath(
-                os.path.join(str(Path.home()),
-                             "/.cache/dasf/profiler/"))
+                os.path.join(str(Path.home()), "/.cache/dasf/profiler/")
+            )
             os.makedirs(profiler_dir, exist_ok=True)
 
             dmem.install(
@@ -155,8 +163,7 @@ class DaskPipelineExecutor(Executor):
     def execute(self, fn, *args, **kwargs):
         return fn(*args, **kwargs)
 
-    def register_plugin(self, plugin: Union[WorkerPlugin,
-                                            NannyPlugin]):
+    def register_plugin(self, plugin: Union[WorkerPlugin, NannyPlugin]):
         if isinstance(plugin, WorkerPlugin):
             self.client.register_worker_plugin(plugin)
         elif isinstance(plugin, NannyPlugin):
@@ -200,6 +207,7 @@ class DaskTasksPipelineExecutor(DaskPipelineExecutor):
     cluster_kwargs -- extra Dask parameters like memory, processes, etc.
     client_kwargs -- extra Client parameters.
     """
+
     def __init__(
         self,
         address=None,
@@ -212,7 +220,6 @@ class DaskTasksPipelineExecutor(DaskPipelineExecutor):
         cluster_kwargs=None,
         client_kwargs=None,
     ):
-
         super().__init__(
             address=address,
             port=port,

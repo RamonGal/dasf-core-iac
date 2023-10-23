@@ -15,36 +15,31 @@ global_config.token = ""
 #         }
 #       }
 
-
-@script()
-def run_script(message: str):
-    print(message)
+pod_spec_patch = '{"serviceAccountName": "dask-creator-ad7a5f7a"}'
 
 
 with Workflow(
     generate_name="dag-target-",
     entrypoint="dag-target",
-    namespace="argo",
+    namespace="dasf-df6615d5",
     arguments=Parameter(name="target", value="E"),
 ) as w:
-    echo = Container(
-        name="echo",
-        inputs=Parameter(name="script"),
-        image="python:3.10-slim-bullseye",
-        command=["echo", "{{inputs.parameters.script}}"],
+    dasf = Container(
+        name="dasf",
+        image="dasf:cpu",
+        command=["python", "cluster_spec.py", "cluster"],
+        env={
+            "NAMESPACE": "dasf-df6615d5",
+            "IMAGE_DASK": "dasf:cpu",
+        },
+        pod_spec_patch=pod_spec_patch,
     )
 
     with DAG(
         name="dag-target",
     ):
-        A = echo(name="A", arguments={"script": "A"}, deamon=True)
-        B = echo(name="B", arguments={"script": "B"})
-        C = run_script(name="C", arguments={"message": "C"})
-        D = run_script(name="D", arguments={"message": "D"})
-        E = run_script(name="E", arguments={"message": "Hello world!"})
+        A = dasf(message="A")
 
-        A >> B >> D
-        A >> C >> D
-        C >> E
+        A
 
 w.create()

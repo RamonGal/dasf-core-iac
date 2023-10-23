@@ -1,0 +1,35 @@
+FROM ghcr.io/dask/dask:2023.10.0
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN echo "tzdata tzdata/Areas select Europe" | debconf-set-selections
+RUN echo "tzdata tzdata/Zones/Europe select London" | debconf-set-selections
+
+
+RUN apt update -y 
+RUN apt install -y --no-install-recommends \
+        g++ \
+        gcc \
+        git \
+        graphviz \
+        openssh-client \
+        python3-dev \
+        xdg-utils \
+        python3-pip && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN pip3 install pip --upgrade
+
+COPY dasf /dasf
+COPY requirements.txt /requirements.txt
+COPY README.md README.md
+
+RUN pip3 install --no-cache-dir -r requirements.txt
+
+# copy the action source code last (to avoid cache busting)
+COPY dask-operator .
+
+WORKDIR /
+
+LABEL dasf=latest
+
+

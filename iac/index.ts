@@ -1,46 +1,43 @@
-
 import { newArgoController } from './argoController';
 import { createDaskOperator } from './daskOperator';
+import { createDaskServiceAccount } from './daskRole';
+import { createDasfPod } from './dasfPod';
 import * as k8s from '@pulumi/kubernetes';
 import * as pulumi from '@pulumi/pulumi';
 
 const config = new pulumi.Config();
 export const namespaceDasf = config.require('namespace');
-const kubeconfig = config.require('kubeconfig');
+export const operator = config.requireBoolean('operator');
 
 // define the k8s provider
-let provider: k8s.Provider | undefined;
-if (kubeconfig !== 'false') {
-  provider = new k8s.Provider('k8s', {
-    kubeconfig: kubeconfig
-  });
-} else {
-  provider = undefined;
-}
 
 const namespaceArgs: k8s.core.v1.NamespaceArgs = {};
-const namespaceOpts: pulumi.CustomResourceOptions = provider
-  ? { provider: provider }
-  : {};
 
-const namespace = new k8s.core.v1.Namespace(
-  namespaceDasf,
-  namespaceArgs,
-  namespaceOpts
-);
+const namespace = new k8s.core.v1.Namespace(namespaceDasf, namespaceArgs);
 
 export const namespaceName = namespace.metadata.name;
-createDaskOperator({
+
+const serviceAccount = createDaskServiceAccount(namespace);
+
+const daskOperator = createDaskOperator({
   namespace: namespace,
-  releaseName: 'dask-operator',
-  provider: provider
+  releaseName: 'dask-operator'
 });
 
-
+if (!operator) {
+  newArgoController({
+    namespace: namespace,
+    port: 2746,
+    serviceAccount: serviceAccount,
+    daskOperator: daskOperator
+  });
+} else {
+  createDasfPod({
+    namespace: namespace,
+    releaseName: 'dasf',
+    serviceAccount: serviceAccount,
+    daskOperator: daskOperator,
+    command: ['sleep', '3000']
+  });
+}
 // Create an argo controller
-newArgoController({
-  namespace: namespace,
-  port: 2746,
-  provider: provider,
-  portForward: true
-});

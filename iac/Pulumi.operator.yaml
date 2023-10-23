@@ -1,0 +1,10 @@
+config:
+  dasf-iac:dasfImage: dasf:cpu
+  dasf-iac:kubeconfig: 'false'
+  dasf-iac:namespace: 'dasf'
+  dasf-iac:portDasf: "8788"
+  dasf-iac:portScheduler: "8786"
+  dasf-iac:portWorker: "8787"
+  dasf-iac:replicas: "2"
+  dasf-iac:operator: true
+  kubernetes:context: minikube

@@ -3,25 +3,23 @@ import * as pulumi from '@pulumi/pulumi';
 
 interface ClusterConfig {
   namespace: k8s.core.v1.Namespace;
-  releaseName: string;
-  provider?: k8s.Provider;
+  releaseName: string; 
 }
 
-export const createDaskOperator = (args: ClusterConfig) => {
-  const opts = args.provider
-      ? { provider: args.provider }
-      : { }
+export const createDaskOperator = (args: ClusterConfig):k8s.helm.v3.Chart => {
+  
   const argoChart = new k8s.helm.v3.Chart(
     'dask',
     {
       chart: 'dask-kubernetes-operator',
-      version: '2023.9.0', // replace with the chart version you want to use
+      version: '2023.10.0', // replace with the chart version you want to use
       fetchOpts: {
         repo: 'https://helm.dask.org/'
       },
       namespace: args.namespace.metadata.name,
       
     },
-    {dependsOn: [args.namespace], ...opts}
+    {dependsOn: [args.namespace]}
   );
+  return argoChart;
 };
