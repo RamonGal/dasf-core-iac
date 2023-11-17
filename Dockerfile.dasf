@@ -25,11 +25,6 @@ COPY README.md README.md
 
 RUN pip3 install --no-cache-dir -r requirements.txt
 
-# copy the action source code last (to avoid cache busting)
-COPY dask-operator .
-
-WORKDIR /
-
-LABEL dasf=latest
+WORKDIR / 
 
 

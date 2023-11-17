@@ -1,0 +1,6 @@
+FROM ubuntu:20.04
+
+COPY f3.tar.gz /f3.tar.gz
+
+# decompress the data
+RUN tar -xzf f3.tar.gz

@@ -3,8 +3,7 @@ import * as k8s from '@pulumi/kubernetes';
 interface NewArgoControllerArgs {
   namespace: k8s.core.v1.Namespace;
   port: number;
-  serviceAccount: k8s.core.v1.ServiceAccount;
-  daskOperator: k8s.helm.v3.Chart;
+  serviceAccount: k8s.core.v1.ServiceAccount; 
 }
 
 export const newArgoController = (args: NewArgoControllerArgs) => {
@@ -24,6 +23,6 @@ export const newArgoController = (args: NewArgoControllerArgs) => {
         }
       }
     },
-    { dependsOn: [args.namespace, args.serviceAccount, args.daskOperator] }
+    { dependsOn: [args.namespace, args.serviceAccount ] }
   );
 };

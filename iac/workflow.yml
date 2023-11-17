@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: debug-pod
+  namespace: dasf-426c9b50
+spec:
+  containers:
+    - name: debug-container
+      image: dasf-seismic:cpu
+      command: ["/bin/sh"]
+      args: ["-c", "while true; do sleep 30; done"]
+      volumeMounts:
+        - name: shared
+          mountPath: /shared
+      resources: 
+        requests: 
+          memory: '2Gi'
+          cpu: '1'
+          
+        limits: 
+          memory: '4Gi'
+          cpu: '2'
+  volumes:
+    - name: shared
+      persistentVolumeClaim:
+        claimName: many-nfs-pvc
+  serviceAccountName: dask-creator-cd56e922
