@@ -57,6 +57,8 @@ class DaskPipelineExecutor(Executor):
     gpu_allocator -- sets which is the memory allocator for GPU (default cupy).
     cluster_kwargs -- extra Dask parameters like memory, processes, etc.
     client_kwargs -- extra Client parameters.
+    cluster -- a Dask cluster object.
+    daskjob -- boolean to indicate if the executor is used in a DaskJob.
     """
 
     def __init__(
@@ -71,6 +73,7 @@ class DaskPipelineExecutor(Executor):
         cluster_kwargs=None,
         client_kwargs=None,
         cluster=None,
+        daskjob=False,
     ):
         self.address = address
         self.port = port
@@ -87,7 +90,9 @@ class DaskPipelineExecutor(Executor):
             and "scheduler_file" not in client_kwargs
             and cluster is None
         )
-        if cluster is not None:
+        if daskjob:
+            self.client = Client()
+        elif cluster is not None:
             self.client = Client(cluster)
         elif address:
             address = f"{setup_dask_protocol()}{address}:{port}"

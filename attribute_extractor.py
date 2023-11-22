@@ -217,13 +217,9 @@ if __name__ == "__main__":
             )
     else:
         if args.run == "cpu":
-            executor = DaskPipelineExecutor(
-                local=True, use_gpu=False, cluster_kwargs=cluster_kwargs
-            )
+            executor = DaskPipelineExecutor(local=False, use_gpu=False, daskjob=True)
         else:
-            executor = DaskPipelineExecutor(
-                local=True, use_gpu=True, cluster_kwargs=cluster_kwargs
-            )
+            executor = DaskPipelineExecutor(local=False, use_gpu=True, daskjob=True)
 
     # Run the pipeline
     print("Starting...")
