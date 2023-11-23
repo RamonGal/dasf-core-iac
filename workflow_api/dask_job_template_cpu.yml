@@ -1,7 +1,7 @@
 apiVersion: kubernetes.dask.org/v1
 kind: DaskJob
 metadata:  
-  generateName: dask-jobs-
+  name: dask-job
   namespace: {{namespace}}
 spec:
   job:

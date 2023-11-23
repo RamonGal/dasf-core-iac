@@ -1,0 +1,83 @@
+apiVersion: kubernetes.dask.org/v1
+kind: DaskJob
+metadata:  
+  name: dask-job
+  namespace: {{namespace}}
+spec:
+  job:
+    spec:
+      serviceAccountName: {{serviceAccountName}}
+      containers:
+        - name: job
+          image:  "{{image}}"
+          imagePullPolicy: "IfNotPresent"
+          args: {{formatted_args}}
+          volumeMounts:
+            - name: shared
+              mountPath: /shared 
+      volumes:
+        - name: shared
+          persistentVolumeClaim:
+            claimName: {{nfsname}}
+
+  cluster:
+    spec:
+      worker:
+        replicas: 2
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: worker
+              image: { { image } }
+              imagePullPolicy: IfNotPresent
+              args: [dask-cuda-worker, $(DASK_SCHEDULER_ADDRESS), --rmm-managed-memory]
+              resources:
+                limits:
+                  cpu: "2"
+                  memory: 3G
+                  nvidia.com/gpu: 1 # requesting 1 GPU
+                requests:
+                  cpu: "2"
+                  memory: 3G
+                  nvidia.com/gpu: 1 # requesting 1 GPU
+      scheduler:
+        spec:
+          containers:
+            - name: scheduler
+              image: "{{image}}"
+              imagePullPolicy: "IfNotPresent"
+              args:
+                - dask-scheduler
+              ports:
+                - name: tcp-comm
+                  containerPort: 8786
+                  protocol: TCP
+                - name: http-dashboard
+                  containerPort: 8787
+                  protocol: TCP
+              readinessProbe:
+                httpGet:
+                  port: http-dashboard
+                  path: /health
+                initialDelaySeconds: 5
+                periodSeconds: 10
+              livenessProbe:
+                httpGet:
+                  port: http-dashboard
+                  path: /health
+                initialDelaySeconds: 15
+                periodSeconds: 20 
+        service:
+          type: ClusterIP
+          selector:
+            dask.org/cluster-name: dask-job
+            dask.org/component: scheduler
+          ports:
+            - name: tcp-comm
+              protocol: TCP
+              port: 8786
+              targetPort: "tcp-comm"
+            - name: http-dashboard
+              protocol: TCP
+              port: 8787
+              targetPort: "http-dashboard"

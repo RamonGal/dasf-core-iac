@@ -1,0 +1,11 @@
+FROM dasf:gpu
+
+# install the seismic stuff
+COPY dasf_seismic /dasf_seismic 
+COPY requirements-seismic.txt /requirements-seismic.txt
+RUN pip3 install --no-cache-dir -r requirements-seismic.txt
+
+# add the code to run
+COPY attribute_extractor.py /attribute_extractor.py
+
+WORKDIR /
