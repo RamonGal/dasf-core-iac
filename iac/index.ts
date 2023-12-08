@@ -8,7 +8,7 @@ import * as pulumi from '@pulumi/pulumi';
 
 const config = new pulumi.Config();
 export const namespaceDasf = config.require('namespace');
-export const operator = config.requireBoolean('operator');
+export const dask = config.requireBoolean('dask');
 export const nfsVolume = config.requireBoolean('nfsVolume');
 export const argo = config.requireBoolean('argo');
 
@@ -24,7 +24,7 @@ const serviceAccount = createDaskServiceAccount(namespace);
 
 export const serviceAccountName = serviceAccount.metadata.name;
 
-if (operator) {
+if (dask) {
   createDaskOperator({
     namespace: namespace,
     releaseName: 'dask-operator'
