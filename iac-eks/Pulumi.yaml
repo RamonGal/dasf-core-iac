@@ -1,0 +1,3 @@
+name: example-cluster
+runtime: nodejs
+description: An example stack to deploy an EKS cluster in AWS with dasf

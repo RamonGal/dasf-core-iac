@@ -1,0 +1,24 @@
+{
+  "name": "example-cluster",
+  "devDependencies": {
+    "@types/node": "^14",
+    "onchange": "^7.1.0",
+    "nodemon": "^3.0.1",
+    "prettier": "3.0"
+  },
+  "dependencies": {
+    "@pulumi/aws": "^5.4.0",
+    "@pulumi/awsx": "^0.40.0",
+    "@pulumi/eks": "^0.40.0",
+    "@pulumi/kubernetes": "^3.19.2",
+    "@pulumi/pulumi": "^3.0.0"
+  },
+  "scripts": {
+    "watch": "onchange '**/*.ts'  -- prettier --config .prettierrc --write {{changed}}",
+    "deploy": "pulumi up --yes",
+    "fmt": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,md}\"",
+    "deploy-and-open": "pulumi up --yes && npm run open-argo-port",
+    "open-argo-port": "kubectl -n $npm_config_namespace port-forward deployment/argo-argo-workflows-server 2746:2746",
+    "open-dasf-scheduler-port": "kubectl port-forward svc/cluster-scheduler $npm_config_port:$npm_config_port -n $npm_config_namespace"
+  }
+}
