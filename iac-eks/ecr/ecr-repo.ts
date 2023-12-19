@@ -1,63 +1,63 @@
-import { ComponentResource, Output } from '@pulumi/pulumi';
-import { ecr } from '@pulumi/aws';
+import { ComponentResource, Output } from "@pulumi/pulumi";
+import { ecr } from "@pulumi/aws";
 
 class EcrRepo extends ComponentResource {
   public repositoryUrl: Output<string>;
 
   constructor(name: string) {
-    super('ecr:Repo', name);
+    super("ecr:Repo", name);
 
     const repo = new ecr.Repository(
       `${name}-repo`,
       {
         imageScanningConfiguration: {
-          scanOnPush: true
+          scanOnPush: true,
         },
-        imageTagMutability: 'MUTABLE'
+        imageTagMutability: "MUTABLE",
       },
       {
-        parent: this
-      }
+        parent: this,
+      },
     );
 
     const lifecyclePolicy = new ecr.LifecyclePolicy(
-      'ecrLifecyclePolicy',
+      "ecrLifecyclePolicy",
       {
         repository: repo.name,
         policy: JSON.stringify({
           rules: [
             {
               rulePriority: 1,
-              description: 'Keep last 30 images',
+              description: "Keep last 30 images",
               selection: {
-                tagStatus: 'tagged',
-                tagPrefixList: ['v'],
-                countType: 'imageCountMoreThan',
-                countNumber: 30
+                tagStatus: "tagged",
+                tagPrefixList: ["v"],
+                countType: "imageCountMoreThan",
+                countNumber: 30,
               },
               action: {
-                type: 'expire'
-              }
+                type: "expire",
+              },
             },
             {
               rulePriority: 2,
-              description: 'Expire images older than 14 days',
+              description: "Expire images older than 14 days",
               selection: {
-                tagStatus: 'untagged',
-                countType: 'sinceImagePushed',
-                countUnit: 'days',
-                countNumber: 14
+                tagStatus: "untagged",
+                countType: "sinceImagePushed",
+                countUnit: "days",
+                countNumber: 14,
               },
               action: {
-                type: 'expire'
-              }
-            }
-          ]
-        })
+                type: "expire",
+              },
+            },
+          ],
+        }),
       },
       {
-        parent: this
-      }
+        parent: this,
+      },
     );
 
     this.repositoryUrl = repo.repositoryUrl;

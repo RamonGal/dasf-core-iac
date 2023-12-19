@@ -1,126 +1,149 @@
-import * as awsx from '@pulumi/awsx';
-
-import { provider } from '../iam';
-import { vpc } from '../vpc';
-
-import { stackName, projectName } from '../config';
+import { ec2 } from "@pulumi/aws";
+import { vpc } from "../vpc";
+import { stackName, projectName } from "../config";
 
 // Create a cluster security group
-const clusterSecurityGroup = new awsx.ec2.SecurityGroup(
+const clusterSecurityGroup = new ec2.SecurityGroup(
   `${projectName}-${stackName}-cluster-securitygroup`,
   {
-    vpc: vpc,
+    vpcId: vpc.vpcId,
     tags: {
-      Name: `${projectName}-${stackName}-cluster-securitygroup`
-    }
+      Name: `${projectName}-${stackName}-cluster-securitygroup`,
+    },
   },
-  { provider: provider }
 );
 // Create an apps security group
-const appsSecurityGroup = new awsx.ec2.SecurityGroup(
+const appsSecurityGroup = new ec2.SecurityGroup(
   `${projectName}-${stackName}-apps-securitygroup`,
   {
-    vpc: vpc,
+    vpcId: vpc.vpcId,
     tags: {
-      Name: `${projectName}-${stackName}-apps-securitygroup`
-    }
+      Name: `${projectName}-${stackName}-apps-securitygroup`,
+    },
   },
-  { provider: provider }
 );
 // create alb security group
-const albSecurityGroup = new awsx.ec2.SecurityGroup(
+const albSecurityGroup = new ec2.SecurityGroup(
   `${projectName}-${stackName}-alb-securitygroup`,
   {
-    vpc: vpc,
+    vpcId: vpc.vpcId,
     tags: {
-      Name: `${projectName}-${stackName}-alb-securitygroup`
-    }
+      Name: `${projectName}-${stackName}-alb-securitygroup`,
+    },
   },
-  { provider: provider }
 );
 
-/* apps */
-appsSecurityGroup.createIngressRule(
-  `${projectName}-${stackName}-apps-kubelets-in`,
-  {
-    description: 'Allow cluster to communicate with apps kubelets',
-    ports: new awsx.ec2.TcpPorts(10250),
-    location: { sourceSecurityGroupId: clusterSecurityGroup.id }
-  }
-);
-appsSecurityGroup.createEgressRule(
-  `${projectName}-${stackName}-apps-cluster-api-out`,
-  {
-    description: 'Allow apps to communicate with cluster api',
-    ports: new awsx.ec2.TcpPorts(443),
-    location: { sourceSecurityGroupId: clusterSecurityGroup.id }
-  }
-);
-appsSecurityGroup.createIngressRule(
-  `${projectName}-${stackName}-apps-coredns-tcp-in`,
-  {
-    description: 'Allow apps to communicate with coredns TCP',
-    ports: new awsx.ec2.TcpPorts(53),
-    location: { sourceSecurityGroupId: appsSecurityGroup.id }
-  }
-);
-appsSecurityGroup.createIngressRule(
-  `${projectName}-${stackName}-apps-coredns-udp-in`,
-  {
-    description: 'Allow apps to communicate with coredns UDP',
-    ports: new awsx.ec2.UdpPorts(53),
-    location: { sourceSecurityGroupId: appsSecurityGroup.id }
-  }
-);
-appsSecurityGroup.createEgressRule(
-  `${projectName}-${stackName}-apps-https-out`,
-  {
-    description: 'Allow apps HTTPS out',
-    ports: new awsx.ec2.TcpPorts(443),
-    location: { cidrBlocks: ['0.0.0.0/0'] }
-  }
-);
+// Ingress Rule: Allow cluster to communicate with apps kubelets
+new ec2.SecurityGroupRule(`${projectName}-${stackName}-apps-kubelets-in`, {
+  type: "ingress",
+  securityGroupId: appsSecurityGroup.id,
+  sourceSecurityGroupId: clusterSecurityGroup.id,
+  protocol: "tcp",
+  fromPort: 10250,
+  toPort: 10250,
+  description: "Allow cluster to communicate with apps kubelets",
+});
+
+// Egress Rule: Allow apps to communicate with cluster API
+new ec2.SecurityGroupRule(`${projectName}-${stackName}-apps-cluster-api-out`, {
+  type: "egress",
+  securityGroupId: appsSecurityGroup.id,
+  sourceSecurityGroupId: clusterSecurityGroup.id,
+  protocol: "tcp",
+  fromPort: 443,
+  toPort: 443,
+  description: "Allow apps to communicate with cluster API",
+});
+
+// Ingress Rule: Allow apps to communicate with coredns TCP
+new ec2.SecurityGroupRule(`${projectName}-${stackName}-apps-coredns-tcp-in`, {
+  type: "ingress",
+  securityGroupId: appsSecurityGroup.id,
+  protocol: "tcp",
+  fromPort: 53,
+  toPort: 53,
+  sourceSecurityGroupId: appsSecurityGroup.id,
+  description: "Allow apps to communicate with coredns TCP",
+});
+
+// Ingress Rule: Allow apps to communicate with coredns UDP
+new ec2.SecurityGroupRule(`${projectName}-${stackName}-apps-coredns-udp-in`, {
+  type: "ingress",
+  securityGroupId: appsSecurityGroup.id,
+  protocol: "udp",
+  fromPort: 53,
+  toPort: 53,
+  sourceSecurityGroupId: appsSecurityGroup.id,
+  description: "Allow apps to communicate with coredns UDP",
+});
+
+// Egress Rule: Allow apps HTTPS out
+new ec2.SecurityGroupRule(`${projectName}-${stackName}-apps-https-out`, {
+  type: "egress",
+  securityGroupId: appsSecurityGroup.id,
+  protocol: "tcp",
+  fromPort: 443,
+  toPort: 443,
+  cidrBlocks: ["0.0.0.0/0"],
+  description: "Allow apps HTTPS out",
+});
 /* cluster */
-clusterSecurityGroup.createIngressRule(
+// Ingress Rule: Allow apps to communicate with the cluster API
+new ec2.SecurityGroupRule(
   `${projectName}-${stackName}-apps-cluster-api-in-tcp`,
   {
-    description: 'Allow apps to communicate with to cluster API',
-    ports: new awsx.ec2.TcpPorts(443),
-    location: { sourceSecurityGroupId: appsSecurityGroup.id }
-  }
+    type: "ingress",
+    securityGroupId: clusterSecurityGroup.id,
+    sourceSecurityGroupId: appsSecurityGroup.id,
+    protocol: "tcp",
+    fromPort: 443,
+    toPort: 443,
+    description: "Allow apps to communicate with the cluster API",
+  },
 );
-clusterSecurityGroup.createEgressRule(
-  `${projectName}-${stackName}-apps-kubelets-out-tcp`,
-  {
-    description: 'Allow cluster to communicate with apps kubelets',
-    ports: new awsx.ec2.TcpPorts(10250),
-    location: { sourceSecurityGroupId: appsSecurityGroup.id }
-  }
-);
-clusterSecurityGroup.createIngressRule(
-  `${projectName}-${stackName}-apps-to-alb-tcp-in`,
-  {
-    description: 'Allow apps to communicate with ALB on any port',
-    ports: new awsx.ec2.AllTcpPorts(),
-    location: { sourceSecurityGroupId: albSecurityGroup.id }
-  }
-);
+
+// Egress Rule: Allow cluster to communicate with apps kubelets
+new ec2.SecurityGroupRule(`${projectName}-${stackName}-apps-kubelets-out-tcp`, {
+  type: "egress",
+  securityGroupId: clusterSecurityGroup.id,
+  sourceSecurityGroupId: appsSecurityGroup.id,
+  protocol: "tcp",
+  fromPort: 10250,
+  toPort: 10250,
+  description: "Allow cluster to communicate with apps kubelets",
+});
+
+// Ingress Rule: Allow apps to communicate with ALB on any port
+new ec2.SecurityGroupRule(`${projectName}-${stackName}-apps-to-alb-tcp-in`, {
+  type: "ingress",
+  securityGroupId: clusterSecurityGroup.id,
+  sourceSecurityGroupId: albSecurityGroup.id,
+  protocol: "tcp",
+  fromPort: 0, // 0 for all ports
+  toPort: 65535, // 65535 for all ports
+  description: "Allow apps to communicate with ALB on any port",
+});
 /* alb */
-albSecurityGroup.createIngressRule(
-  `${projectName}-${stackName}-alb-to-apps-tcp-in`,
-  {
-    description: 'Allow apps to communicate with ALB on any port',
-    ports: new awsx.ec2.AllTcpPorts(),
-    location: { sourceSecurityGroupId: appsSecurityGroup.id }
-  }
-);
-albSecurityGroup.createEgressRule(
-  `${projectName}-${stackName}-apps-alb-tcp-out`,
-  {
-    description: 'Allow ALB to communicate with apps on any port',
-    ports: new awsx.ec2.AllTcpPorts(),
-    location: { sourceSecurityGroupId: appsSecurityGroup.id }
-  }
-);
+// Ingress Rule: Allow apps to communicate with ALB on any port
+new ec2.SecurityGroupRule(`${projectName}-${stackName}-alb-to-apps-tcp-in`, {
+  type: "ingress",
+  securityGroupId: albSecurityGroup.id,
+  sourceSecurityGroupId: appsSecurityGroup.id,
+  protocol: "tcp",
+  fromPort: 0, // 0 for all ports
+  toPort: 65535, // 65535 for all ports
+  description: "Allow apps to communicate with ALB on any port",
+});
+
+// Egress Rule: Allow ALB to communicate with apps on any port
+new ec2.SecurityGroupRule(`${projectName}-${stackName}-apps-alb-tcp-out`, {
+  type: "egress",
+  securityGroupId: albSecurityGroup.id,
+  sourceSecurityGroupId: appsSecurityGroup.id,
+  protocol: "tcp",
+  fromPort: 0, // 0 for all ports
+  toPort: 65535, // 65535 for all ports
+  description: "Allow ALB to communicate with apps on any port",
+});
 
 export { clusterSecurityGroup, appsSecurityGroup, albSecurityGroup };

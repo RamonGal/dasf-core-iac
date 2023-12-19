@@ -2,9 +2,9 @@ import {
   ProviderResource,
   ComponentResource,
   Resource,
-  Output
-} from '@pulumi/pulumi';
-import { helm } from '@pulumi/kubernetes';
+  Output,
+} from "@pulumi/pulumi";
+import { helm } from "@pulumi/kubernetes";
 
 interface ArgoOperatorArgs {
   provider: ProviderResource | undefined;
@@ -19,7 +19,7 @@ interface ArgoOperatorArgs {
 
 class ArgoOperator extends ComponentResource {
   constructor(name: string, args: ArgoOperatorArgs) {
-    super('cluster-components:ArgoOperator', name);
+    super("cluster-components:ArgoOperator", name);
 
     const provider = args.provider;
     const labels = args.labels;
@@ -34,27 +34,27 @@ class ArgoOperator extends ComponentResource {
       `${name}`,
       {
         namespace: clusterNamespace,
-        chart: 'argo-workflows',
-        repositoryOpts: { repo: 'https://argoproj.github.io/argo-helm' },
+        chart: "argo-workflows",
+        repositoryOpts: { repo: "https://argoproj.github.io/argo-helm" },
         version: version,
         values: {
           nodeSelector: labels,
           server: {
             name: serviceName,
-            extraArgs: ['--auth-mode=server'],
-            serviceType: 'NodePort',
-            serviceNodePort: nodePort
+            extraArgs: ["--auth-mode=server"],
+            serviceType: "NodePort",
+            serviceNodePort: nodePort,
           },
           serviceAccount: {
-            name: serviceAccountName
-          }
-        }
+            name: serviceAccountName,
+          },
+        },
       },
       {
         provider: provider,
         dependsOn: dependsOn,
-        parent: this
-      }
+        parent: this,
+      },
     );
   }
 }

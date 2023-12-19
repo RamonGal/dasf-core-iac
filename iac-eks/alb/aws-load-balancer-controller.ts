@@ -2,14 +2,14 @@ import {
   ProviderResource,
   ComponentResource,
   Resource,
-  Output
-} from '@pulumi/pulumi';
-import { helm } from '@pulumi/kubernetes';
+  Output,
+} from "@pulumi/pulumi";
+import { helm } from "@pulumi/kubernetes";
 
 interface AlbControllerArgs {
   provider: ProviderResource | undefined;
   clusterName: Output<string>;
-  clusterNamespace: string;
+  clusterNamespace: Output<string>;
   labels: { [key: string]: string };
   version: string;
   dependsOn?: Resource[];
@@ -17,7 +17,7 @@ interface AlbControllerArgs {
 
 class AlbController extends ComponentResource {
   constructor(name: string, args: AlbControllerArgs) {
-    super('cluster-components:AlbController', name);
+    super("cluster-components:AlbController", name);
 
     const provider = args.provider;
     const clusterName = args.clusterName;
@@ -30,24 +30,24 @@ class AlbController extends ComponentResource {
       `${name}`,
       {
         namespace: clusterNamespace,
-        chart: 'aws-load-balancer-controller',
+        chart: "aws-load-balancer-controller",
         version: version,
-        repositoryOpts: { repo: 'https://aws.github.io/eks-charts' },
+        repositoryOpts: { repo: "https://aws.github.io/eks-charts" },
         values: {
           clusterName: clusterName,
-          autoDiscoverAwsRegion: 'true',
-          autoDiscoverAwsVpcID: 'true',
+          autoDiscoverAwsRegion: "true",
+          autoDiscoverAwsVpcID: "true",
           nodeSelector: labels,
           serviceAnnotations: {
-            'service.beta.kubernetes.io/aws-load-balancer-target-node-labels': `workload=${labels.workload}`
-          }
-        }
+            "service.beta.kubernetes.io/aws-load-balancer-target-node-labels": `workload=${labels.workload}`,
+          },
+        },
       },
       {
         provider: provider,
         dependsOn: dependsOn,
-        parent: this
-      }
+        parent: this,
+      },
     );
   }
 }

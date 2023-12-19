@@ -2,9 +2,9 @@ import {
   ProviderResource,
   ComponentResource,
   Resource,
-  Output
-} from '@pulumi/pulumi';
-import { core, rbac } from '@pulumi/kubernetes';
+  Output,
+} from "@pulumi/pulumi";
+import { core, rbac } from "@pulumi/kubernetes";
 
 interface DaskServiceAccountArgs {
   provider: ProviderResource | undefined;
@@ -15,85 +15,85 @@ interface DaskServiceAccountArgs {
 class DaskServiceAccount extends ComponentResource {
   public readonly saName: Output<string>;
   constructor(name: string, args: DaskServiceAccountArgs) {
-    super('cluster-components:DaskOperator', name);
+    super("cluster-components:DaskOperator", name);
     const provider = args.provider;
     const dependsOn = args.dependsOn;
     const clusterNamespace = args.clusterNamespace;
 
     const daskRole = new rbac.v1.Role(
-      'dask-role',
+      "dask-role",
       {
         metadata: {
-          namespace: clusterNamespace
+          namespace: clusterNamespace,
         },
         rules: [
           {
-            apiGroups: ['kubernetes.dask.org'],
+            apiGroups: ["kubernetes.dask.org"],
             resources: [
-              'daskclusters',
-              'daskworkergroups',
-              'daskworkergroups/scale',
-              'daskjobs',
-              'daskautoscalers'
+              "daskclusters",
+              "daskworkergroups",
+              "daskworkergroups/scale",
+              "daskjobs",
+              "daskautoscalers",
             ],
-            verbs: ['get', 'list', 'watch', 'patch', 'create', 'delete']
+            verbs: ["get", "list", "watch", "patch", "create", "delete"],
           },
           {
-            apiGroups: [''], // indicates the core API group
+            apiGroups: [""], // indicates the core API group
             resources: [
-              'pods',
-              'pods/status',
-              'pods/log',
-              'services',
-              'poddisruptionbudgets'
+              "pods",
+              "pods/status",
+              "pods/log",
+              "services",
+              "poddisruptionbudgets",
             ],
-            verbs: ['get', 'list', 'watch', 'create', 'delete']
-          }
-        ]
+            verbs: ["get", "list", "watch", "create", "delete"],
+          },
+        ],
       },
-      { provider, dependsOn, parent: this }
+      { provider, dependsOn, parent: this },
     );
 
     // Create the ServiceAccount
     const daskCreatorServiceAccount = new core.v1.ServiceAccount(
-      'dask-creator',
+      "dask-creator",
       {
         metadata: {
-          namespace: clusterNamespace
-        }
+          namespace: clusterNamespace,
+        },
       },
       {
         provider,
         dependsOn,
-        parent: this
-      }
+        parent: this,
+      },
     );
 
     // Create the RoleBinding
     const daskRoleBinding = new rbac.v1.RoleBinding(
-      'dask-role-binding',
+      "dask-role-binding",
       {
         metadata: {
-          namespace: clusterNamespace
+          namespace: clusterNamespace,
         },
         roleRef: {
-          apiGroup: 'rbac.authorization.k8s.io',
-          kind: 'Role',
-          name: daskRole.metadata.name
+          apiGroup: "rbac.authorization.k8s.io",
+          kind: "Role",
+          name: daskRole.metadata.name,
         },
         subjects: [
           {
-            kind: 'ServiceAccount',
+            kind: "ServiceAccount",
             name: daskCreatorServiceAccount.metadata.name,
-            namespace: clusterNamespace
-          }
-        ]
+            namespace: clusterNamespace,
+          },
+        ],
       },
       {
         provider,
         dependsOn,
-        parent: this
-      }
+        parent: this,
+      },
     );
     this.saName = daskCreatorServiceAccount.metadata.name;
   }

@@ -7,15 +7,10 @@
     "moduleResolution": "node",
     "sourceMap": true,
     "experimentalDecorators": true,
-    "allowSyntheticDefaultImports": true,
     "pretty": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,
-    "forceConsistentCasingInFileNames": true,
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./*"]
-    }
+    "forceConsistentCasingInFileNames": true
   },
-  "include": ["index.ts"]
+  "files": ["index.ts"]
 }

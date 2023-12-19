@@ -1,21 +1,7 @@
-import { vpc } from './vpc';
-import {
-  appsPrivateSubnets,
-  appsPublicSubnets,
-  appsPrivateCidrs,
-  appsPublicCidrs,
-  appsPrivateSubnetIds,
-  appsPublicSubnetIds,
-  appsPrivateRouteTableIds
-} from './subnets';
+import * as awsx from "@pulumi/awsx";
+import { vpcNetworkCidr, projectName, stackName } from "../config";
 
-export {
-  vpc,
-  appsPrivateSubnets,
-  appsPublicSubnets,
-  appsPrivateCidrs,
-  appsPublicCidrs,
-  appsPrivateSubnetIds,
-  appsPublicSubnetIds,
-  appsPrivateRouteTableIds
-};
+const vpc = new awsx.ec2.Vpc(`${projectName}-${stackName}-eks-vpc`, {
+  cidrBlock: vpcNetworkCidr,
+});
+export { vpc };

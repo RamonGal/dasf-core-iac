@@ -1,17 +1,16 @@
-import { Provider } from '@pulumi/aws';
-import { InstanceType, LaunchTemplate } from '@pulumi/aws/ec2';
+import { Provider } from "@pulumi/aws";
+import { InstanceType, LaunchTemplate } from "@pulumi/aws/ec2";
 import {
   ComponentResource,
   Input,
   Output,
-  OutputInstance
-} from '@pulumi/pulumi';
+  OutputInstance,
+} from "@pulumi/pulumi";
+import { cluster } from "../eks";
 
 interface LaunchTemplateArgs {
-  provider: Provider;
   labels: { [workload: string]: string };
   instanceType: Input<InstanceType>;
-  clusterName: Output<string>;
   securityGroups: Input<string>[];
 }
 
@@ -21,9 +20,8 @@ class WorkerLaunchTemplate extends ComponentResource {
   public latestVersion: OutputInstance<number>;
 
   constructor(name: string, args: LaunchTemplateArgs) {
-    super('ec2:launch-templates:WorkerLaunchTemplate', name);
+    super("ec2:launch-templates:WorkerLaunchTemplate", name);
 
-    const provider = args.provider;
     const securityGroups = args.securityGroups;
     const labels = args.labels;
 
@@ -31,29 +29,29 @@ class WorkerLaunchTemplate extends ComponentResource {
       `${name}-launch-template`,
       {
         metadataOptions: {
-          httpEndpoint: 'enabled',
-          httpTokens: 'required',
+          httpEndpoint: "enabled",
+          httpTokens: "required",
           httpPutResponseHopLimit: 2,
-          instanceMetadataTags: 'enabled'
+          instanceMetadataTags: "enabled",
         },
         monitoring: {
-          enabled: true
+          enabled: true,
         },
         vpcSecurityGroupIds: securityGroups,
         tagSpecifications: [
           {
-            resourceType: 'instance',
+            resourceType: "instance",
             tags: {
-              Name: `${name}-worker`
-            }
-          }
+              Name: `${name}-worker`,
+            },
+          },
         ],
         tags: {
-          'k8s.io/cluster-autoscaler/node-template/label/workload':
-            labels.workload
-        }
+          "k8s.io/cluster-autoscaler/node-template/label/workload":
+            labels.workload,
+        },
       },
-      { provider: provider }
+      { dependsOn: [cluster] },
     );
 
     this.name = launchTemplate.name;

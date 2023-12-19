@@ -1,5 +1,5 @@
-import { ProviderResource, ComponentResource, Resource } from '@pulumi/pulumi';
-import { helm } from '@pulumi/kubernetes';
+import { ProviderResource, ComponentResource, Resource } from "@pulumi/pulumi";
+import { helm } from "@pulumi/kubernetes";
 
 interface DaskOperatorArgs {
   provider: ProviderResource | undefined;
@@ -11,7 +11,7 @@ interface DaskOperatorArgs {
 
 class DaskOperator extends ComponentResource {
   constructor(name: string, args: DaskOperatorArgs) {
-    super('cluster-components:DaskOperator', name);
+    super("cluster-components:DaskOperator", name);
 
     const provider = args.provider;
     const labels = args.labels;
@@ -23,20 +23,20 @@ class DaskOperator extends ComponentResource {
       `${name}`,
       {
         namespace: clusterNamespace,
-        chart: 'dask-kubernetes-operator',
+        chart: "dask-kubernetes-operator",
         repositoryOpts: {
-          repo: 'https://helm.dask.org/'
+          repo: "https://helm.dask.org/",
         },
         version: version,
         values: {
-          nodeSelector: labels
-        }
+          nodeSelector: labels,
+        },
       },
       {
         provider: provider,
         dependsOn: dependsOn,
-        parent: this
-      }
+        parent: this,
+      },
     );
   }
 }

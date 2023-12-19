@@ -1,35 +1,27 @@
-import { Cluster } from '@pulumi/eks';
-import { all } from '@pulumi/pulumi';
-import { eksClusterRole, eksWorkerRole, provider, pulumiRole } from '../iam';
-import { clusterKmsKey } from '../kms';
-import { vpc, appsPublicSubnetIds, appsPrivateSubnetIds } from '../vpc';
-import { clusterSecurityGroup } from '../ec2';
-import { stackName, projectName, clusterConfig, clusterName } from '../config';
+import * as awsx from "@pulumi/awsx";
+import * as eks from "@pulumi/eks";
+import { projectName, stackName, vpcNetworkCidr } from "../config";
+import { eksWorkerRole, eksClusterRole } from "../iam";
+import { clusterSecurityGroup } from "../ec2";
+import { vpc } from "../vpc";
 
-const cluster = new Cluster(
-  clusterName,
-  {
-    endpointPrivateAccess: clusterConfig.endpointPrivateAccess || true,
-    endpointPublicAccess: clusterConfig.endpointPublicAccess || true,
-    createOidcProvider: true,
-    enabledClusterLogTypes: clusterConfig.enabledClusterLogTypes || [
-      'api',
-      'audit'
-    ],
-    skipDefaultNodeGroup: clusterConfig.skipDefaultNodeGroup || true,
-    version: clusterConfig.version || '1.22',
-    nodeAssociatePublicIpAddress:
-      clusterConfig.nodeAssociatePublicIpAddress || false,
-    publicSubnetIds: appsPublicSubnetIds,
-    privateSubnetIds: appsPrivateSubnetIds,
-    encryptionConfigKeyArn: clusterKmsKey.arn,
-    clusterSecurityGroup: clusterSecurityGroup.securityGroup,
-    providerCredentialOpts: { roleArn: pulumiRole.role.arn },
-    serviceRole: eksClusterRole.role,
-    instanceRole: eksWorkerRole.role,
-    vpcId: vpc.id
-  },
-  { provider: provider, dependsOn: [eksClusterRole, eksWorkerRole] }
-);
+// Create the EKS cluster
+const cluster = new eks.Cluster(`${projectName}-${stackName}-eks-cluster`, {
+  // Put the cluster in the new VPC created earlier
+  vpcId: vpc.vpcId,
+  // Public subnets will be used for load balancers
+  publicSubnetIds: vpc.publicSubnetIds,
+  createOidcProvider: true,
+  // Private subnets will be used for cluster nodes
+  privateSubnetIds: vpc.privateSubnetIds,
+  // Change configuration values to change any of the following settings
+  skipDefaultNodeGroup: true,
+  clusterSecurityGroup: clusterSecurityGroup,
+  // Change these values for a private cluster (VPN access required)
+  endpointPrivateAccess: false,
+  endpointPublicAccess: true,
+  serviceRole: eksClusterRole.role,
+  instanceRole: eksWorkerRole.role,
+});
 
-export { cluster, clusterName };
+export { cluster, vpcNetworkCidr };

@@ -3,17 +3,31 @@ import {
   ComponentResource,
   Resource,
   Output,
-  log
-} from '@pulumi/pulumi';
-import { core, helm } from '@pulumi/kubernetes';
-import { Region } from '@pulumi/aws';
+} from "@pulumi/pulumi";
+import { helm } from "@pulumi/kubernetes";
+import { Region } from "@pulumi/aws";
+import {
+  stackName,
+  projectName,
+  appsNodeGroupConfig,
+  chartVersionClusterAutoscaler,
+  imageTagClusterAutoscaler,
+  awsRegion,
+} from "../config";
+import {
+  cluster,
+  clusterProvider,
+  clusterNamespaceName,
+  clusterName,
+} from "../eks";
+import { ClusterAutoscalerRole } from "../iam";
 
 interface ClusterAutoscalerArgs {
   provider: ProviderResource | undefined;
   clusterName: Output<string>;
-  clusterNamespace: string;
+  clusterNamespace: Output<string>;
   serviceAccountRoleArn: Output<string>;
-  serviceAccountName: string;
+  serviceAccountName: Output<string>;
   region: Region;
   version: string;
   imageTag: string;
@@ -22,13 +36,11 @@ interface ClusterAutoscalerArgs {
 }
 
 class ClusterAutoscaler extends ComponentResource {
-  public readonly namespace: Output<string>;
   constructor(name: string, args: ClusterAutoscalerArgs) {
-    super('cluster-components:ClusterAutoscaler', name);
+    super("cluster-components:ClusterAutoscaler", name);
 
     const provider = args.provider;
     const clusterName = args.clusterName;
-    const serviceAccountRoleArn = args.serviceAccountRoleArn;
     const serviceAccountName = args.serviceAccountName;
     const region = args.region;
     const version = args.version;
@@ -37,60 +49,69 @@ class ClusterAutoscaler extends ComponentResource {
     const dependsOn = args.dependsOn;
     const clusterNamespace = args.clusterNamespace;
 
-      
-    const namespace = new  core.v1.Namespace(clusterNamespace, undefined, { provider, parent: this });
-    this.namespace = namespace.metadata.name;
-    log.info(`namespace: ${namespace.metadata.name}`);
-    const clusterAutoscalerServiceAccount = new core.v1.ServiceAccount(
-      `${name}`,
-      {
-        metadata: {
-          namespace: this.namespace,
-          name: serviceAccountName,
-          annotations: {
-            'eks.amazonaws.com/role-arn': serviceAccountRoleArn
-          }
-        }
-      },
-      { provider, deleteBeforeReplace: true, parent: this }
-    );
-
     const clusterAutoscaler = new helm.v3.Release(
       `${name}`,
       {
         namespace: clusterNamespace,
-        createNamespace: false,
-        chart: 'cluster-autoscaler',
+        chart: "cluster-autoscaler",
         version: version,
-        repositoryOpts: { repo: 'https://kubernetes.github.io/autoscaler' },
+        repositoryOpts: { repo: "https://kubernetes.github.io/autoscaler" },
         values: {
           autoDiscovery: {
-            clusterName: clusterName
+            clusterName: clusterName,
           },
           awsRegion: region,
-          cloudProvider: 'aws',
+          cloudProvider: "aws",
           image: { tag: imageTag },
           rbac: {
             serviceAccount: {
               create: false,
-              name: clusterAutoscalerServiceAccount.metadata.name
-            }
+              name: serviceAccountName,
+            },
           },
           extraArgs: {
-            expander: 'least-waste',
-            'skip-nodes-with-system-pods': 'false',
-            'aws-use-static-instance-list': 'true'
+            expander: "least-waste",
+            "skip-nodes-with-system-pods": "false",
+            "aws-use-static-instance-list": "true",
           },
-          nodeSelector: labels
-        }
+          nodeSelector: labels,
+        },
       },
       {
         provider: provider,
         dependsOn: dependsOn,
-        parent: this
-      }
+        parent: this,
+      },
     );
   }
 }
+if (!cluster.core.oidcProvider) {
+  throw new Error("no cluster oidc provider");
+}
 
-export { ClusterAutoscaler };
+const clusterAutoscalerRole = new ClusterAutoscalerRole(
+  `${projectName}-${stackName}-ca-role`,
+  {
+    clusterName: clusterName,
+    clusterProvider: clusterProvider,
+    clusterNamespace: clusterNamespaceName,
+    serviceAccountName: "cluster-autoscaler-sa",
+    clusterOidcProviderArn: cluster.core.oidcProvider.arn,
+    clusterOidcProviderUrl: cluster.core.oidcProvider.url,
+    dependsOn: [cluster],
+  },
+);
+
+const clusterAutoscaler = new ClusterAutoscaler("cluster-autoscaler", {
+  provider: clusterProvider,
+  clusterName: clusterName,
+  clusterNamespace: clusterNamespaceName,
+  serviceAccountRoleArn: clusterAutoscalerRole.role.arn,
+  serviceAccountName: clusterAutoscalerRole.serviceAccountName,
+  region: awsRegion,
+  version: chartVersionClusterAutoscaler,
+  imageTag: imageTagClusterAutoscaler,
+  labels: appsNodeGroupConfig.labels,
+  dependsOn: [clusterAutoscalerRole],
+});
+export { clusterAutoscaler, clusterAutoscalerRole };
