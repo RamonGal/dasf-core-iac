@@ -1,0 +1,3 @@
+name: dasf-service
+runtime: nodejs
+description: infra for dasf and eks

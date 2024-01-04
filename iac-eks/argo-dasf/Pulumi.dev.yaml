@@ -1,0 +1,26 @@
+config:
+  aws:region: us-east-1
+  dasf-argo:org: RamonGal
+  dasf-argo:clusterStackName: dasf-infra
+  dasf-argo:argoDasfStackName: dasf-argo
+  dasf-argo:serviceStackName: dasf-service
+  dasf-argo:desiredClusterSize: "3"
+  dasf-argo:eksNodeInstanceType: t3.medium
+  dasf-argo:maxClusterSize: "6"
+  dasf-argo:minClusterSize: "3"
+  dasf-argo:vpcNetworkCidr: 10.0.0.0/16
+  dasf-argo:imageTagClusterAutoscaler: v1.22.2
+  dasf-argo:networkStackName: example-network 
+  dasf-argo:clusterNamespace: kube-system
+  dasf-argo:chartVersionAlbController: 1.4.2
+  dasf-argo:chartVersionClusterAutoscaler: 9.19.1
+  dasf-argo:chartVersionGitLabAgent: 1.2.0
+  dasf-argo:chartVersionGitLabRunners: 0.41.0
+  dasf-argo:chartVersionMetricsServer: 3.8.2
+  dasf-argo:chartVersionDaskOperator: 2023.10.0
+  dasf-argo:chartVersionArgoController: 0.39.9  
+  dasf-argo:argoNodePort: 30080
+  dasf-argo:argoServiceName: argo-server  
+  dasf-argo:clusterNodeGroupApps: 
+    labels:
+      workload: apps 

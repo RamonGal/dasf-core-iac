@@ -1,0 +1,21 @@
+config:
+  aws:region: us-east-1
+  dasf-infra:clusterStackName: dasf-infra
+  dasf-infra:argoDasfStackName: dasf-argo
+  dasf-infra:serviceStackName: dasf-service
+  dasf-infra:desiredClusterSize: "3"
+  dasf-infra:eksNodeInstanceType: t3.medium
+  dasf-infra:maxClusterSize: "6"
+  dasf-infra:minClusterSize: "3"
+  dasf-infra:vpcNetworkCidr: 10.0.0.0/16 
+  dasf-infra:clusterNamespace: kube-system  
+  dasf-infra:clusterNodeGroupApps:
+    desiredCapacity: 2
+    encryptRootBockDevice: true
+    instanceType: t3.medium
+    labels:
+      workload: apps
+    maxSize: 5
+    minSize: 1
+    name: apps
+    nodeAssociatePublicIpAddress: false
