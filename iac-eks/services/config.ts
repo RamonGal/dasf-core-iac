@@ -27,6 +27,10 @@ const argoDasfStackName = config.require("argoDasfStackName");
 const argoDasfStackRef = new StackReference(
   `${orgName === "" ? "/" : orgName + "/"}${argoDasfStackName}/${stackName}`,
 );
+const autoscalerStackName = config.require("autoscalerStackName");
+const autoscalerStackRef = new StackReference(
+  `${orgName === "" ? "/" : orgName + "/"}${autoscalerStackName}/${stackName}`,
+);
 // And the following information about the stacks
 const albSecurityGroupId = clusterRef.requireOutput("albSecurityGroupId");
 const kubeconfig = clusterRef.requireOutput("kubeconfig");
@@ -34,9 +38,10 @@ const clusterName = clusterRef.requireOutput("clusterName");
 const subnetIds = clusterRef.requireOutput("subnetIds");
 const vpcId = clusterRef.requireOutput("vpcId");
 
-const clusterNamespaceName = argoDasfStackRef.requireOutput(
+const clusterNamespaceName = autoscalerStackRef.requireOutput(
   "clusterNamespaceName",
 );
+
 const argoServiceName = argoDasfStackRef.requireOutput("argoServiceName");
 
 export {

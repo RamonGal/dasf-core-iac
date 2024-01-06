@@ -1,9 +1,10 @@
-import { clusterNamespaceName } from "./eks";
 import { ecrRepoUrl } from "./ecr";
-import { createArgoDasfFramework, createClusterAutoscalerRole } from "./cluster-components";
+import {
+  createArgoDasfFramework, 
+} from "./cluster-components";
 
-const framework = createArgoDasfFramework();
-createClusterAutoscalerRole();
+const framework = createArgoDasfFramework(); 
 const argoServiceName = framework.argoOperator.fullname;
+const daskServiceAccountName = framework.daskServiceAccount.saName; 
 
-export { clusterNamespaceName, ecrRepoUrl, argoServiceName };
+export {  ecrRepoUrl, argoServiceName, daskServiceAccountName };

@@ -40,7 +40,7 @@ class AlbResource extends ComponentResource {
           annotations: {
             "kubernetes.io/ingress.class": "alb",
             "alb.ingress.kubernetes.io/scheme": "internet-facing", 
-            "alb.ingress.kubernetes.io/target-type": "ip" ,
+            "alb.ingress.kubernetes.io/target-type": "ip",
             "alb.ingress.kubernetes.io/security-groups": albSecurityGroupId, 
             "alb.ingress.kubernetes.io/subnets": subnetIds.apply((ids) => {
               return ids.join(",");

@@ -4,6 +4,7 @@ config:
   dasf-service:clusterStackName: dasf-infra
   dasf-service:argoDasfStackName: dasf-argo
   dasf-service:serviceStackName: dasf-service
+  dasf-service:autoscalerStackName: dasf-autoscaler
   dasf-service:chartVersionAlbController: 1.6.1
   dasf-service:argoNodePort: 2746 
   dasf-service:clusterNodeGroupApps: 

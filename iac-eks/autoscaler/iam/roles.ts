@@ -32,34 +32,21 @@ class ClusterAutoscalerRole extends ComponentResource {
       iam.getPolicyDocument({
         statements: [
           {
+            effect: "Allow",
             actions: [
+              "autoscaling:DescribeAutoScalingGroups",
+              "autoscaling:DescribeAutoScalingInstances",
+              "autoscaling:DescribeLaunchConfigurations",
+              "autoscaling:DescribeScalingActivities",
+              "autoscaling:DescribeTags",
               "autoscaling:SetDesiredCapacity",
               "autoscaling:TerminateInstanceInAutoScalingGroup",
-            ],
-            conditions: [
-              {
-                test: "StringEquals",
-                values: ["owned"],
-                variable: `autoscaling:ResourceTag/k8s.io/cluster-autoscaler/${clusterName}`,
-              },
-              {
-                test: "StringEquals",
-                values: ["true"],
-                variable: `autoscaling:ResourceTag/k8s.io/cluster-autoscaler/enabled`,
-              },
-            ],
-            effect: "Allow",
-            resources: ["*"],
-          },
-          {
-            actions: [
-              "autoscaling:DescribeAutoScalingInstances",
-              "autoscaling:DescribeAutoScalingGroups",
+              "ec2:DescribeInstanceTypes",
               "ec2:DescribeLaunchTemplateVersions",
-              "autoscaling:DescribeTags",
-              "autoscaling:DescribeLaunchConfigurations",
+              "ec2:DescribeImages",
+              "ec2:GetInstanceTypesFromInstanceRequirements",
+              "eks:DescribeNodegroup",
             ],
-            effect: "Allow",
             resources: ["*"],
           },
         ],

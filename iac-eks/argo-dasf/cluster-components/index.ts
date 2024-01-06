@@ -1,27 +1,28 @@
 import { DaskOperator } from "./dask-operator";
 import { ArgoOperator } from "./argo-operator";
 import { DaskServiceAccount } from "./dask-rbac-role";
+import {createNFSVolume} from "./nfs-volume";
 import {
   chartVersionDaskOperator,
   chartVersionArgoController,
   appsNodeGroupConfig,
   argoNodePort,
-  argoServiceName,
+  argoServiceName,clusterNamespaceName
 } from "../config";
-import { clusterProvider, clusterNamespaceName } from "../eks";
-import { createClusterAutoscalerRole } from "./cluster-autoscaler";
+import { clusterProvider } from "../eks"; 
+import { Output } from "@pulumi/pulumi";
 
 const createArgoDasfFramework = () => {
   const daskServiceAccount = new DaskServiceAccount("dask-service-account", {
     provider: clusterProvider,
-    clusterNamespace: clusterNamespaceName,
+    clusterNamespace: clusterNamespaceName as Output<string>,
   });
 
   const daskServiceAccountName = daskServiceAccount.saName;
 
   const daskOperator = new DaskOperator("dask-operator", {
     provider: clusterProvider,
-    clusterNamespace: clusterNamespaceName,
+    clusterNamespace: clusterNamespaceName as Output<string>,
     labels: appsNodeGroupConfig.labels,
     version: chartVersionDaskOperator,
     dependsOn: [daskServiceAccount],
@@ -32,10 +33,16 @@ const createArgoDasfFramework = () => {
     serviceAccountName: daskServiceAccountName,
     provider: clusterProvider,
     nodePort: argoNodePort,
-    clusterNamespace: clusterNamespaceName,
+    clusterNamespace: clusterNamespaceName as Output<string>,
     labels: appsNodeGroupConfig.labels,
     version: chartVersionArgoController,
     dependsOn: [daskServiceAccount, daskOperator],
+  });
+
+  createNFSVolume({
+    namespace: clusterNamespaceName as Output<string>,
+    port: 2049, 
+    provider: clusterProvider,
   });
 
   return {
@@ -46,4 +53,4 @@ const createArgoDasfFramework = () => {
   };
 };
 
-export { createArgoDasfFramework, createClusterAutoscalerRole };
+export { createArgoDasfFramework, createNFSVolume  };

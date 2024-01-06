@@ -32,7 +32,7 @@ const albUrl = argoServiceName.apply((name) => {
       {
         name: name,
         port: argoNodePort,
-        path: "/workflows",
+        path: "/",
       },
     ],
     labels: appsNodeGroupConfig.labels, 

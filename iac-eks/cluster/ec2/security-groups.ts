@@ -97,6 +97,25 @@ new ec2.SecurityGroupRule(`${projectName}-${stackName}-apps-https-out`, {
   cidrBlocks: ["0.0.0.0/0"],
   description: "Allow apps HTTPS out",
 });
+// Egress Rule: Allow apps HTTPS out
+new ec2.SecurityGroupRule(`${projectName}-${stackName}-apps-http-out`, {
+  type: "egress",
+  securityGroupId: appsSecurityGroup.id,
+  protocol: "tcp",
+  fromPort: 80,
+  toPort: 80,
+  cidrBlocks: ["0.0.0.0/0"],
+  description: "Allow apps HTTPS out",
+});
+new ec2.SecurityGroupRule(`${projectName}-${stackName}-apps-argo-out`, {
+  type: "egress",
+  securityGroupId: appsSecurityGroup.id,
+  protocol: "tcp",
+  fromPort: 2746,
+  toPort: 2746,
+  cidrBlocks: ["0.0.0.0/0"],
+  description: "Allow apps HTTPS out",
+});
 /* cluster */
 // Ingress Rule: Allow apps to communicate with the cluster API
 new ec2.SecurityGroupRule(
@@ -128,7 +147,7 @@ new ec2.SecurityGroupRule(`${projectName}-${stackName}-cl-to-alb-tcp-in`, {
   type: "ingress",
   securityGroupId: clusterSecurityGroup.id,
   sourceSecurityGroupId: albSecurityGroup.id,
-  protocol: "tcp",
+  protocol: "-1",
   fromPort: 0, // 0 for all ports
   toPort: 0, // 0 for all ports
   description: "Allow cluster to communicate with ALB on any port",
@@ -137,7 +156,7 @@ new ec2.SecurityGroupRule(`${projectName}-${stackName}-alb-to-cl-tcp-in`, {
   type: "ingress",
   securityGroupId: albSecurityGroup.id,
   sourceSecurityGroupId: clusterSecurityGroup.id,
-  protocol: "tcp",
+  protocol: "-1",
   fromPort: 0, // 0 for all ports
   toPort: 0, // 0 for all ports
   description: "Allow alb to communicate with cluster on any port",
@@ -148,7 +167,7 @@ new ec2.SecurityGroupRule(`${projectName}-${stackName}-alb-to-apps-tcp-in`, {
   type: "ingress",
   securityGroupId: albSecurityGroup.id,
   sourceSecurityGroupId: appsSecurityGroup.id,
-  protocol: "tcp",
+   protocol: "-1",
   fromPort: 0, // 0 for all ports
   toPort: 0, // 0 for all ports
   description: "Allow apps to communicate with ALB on any port",
@@ -159,7 +178,7 @@ new ec2.SecurityGroupRule(`${projectName}-${stackName}-apps-alb-tcp-out`, {
   type: "ingress",
   securityGroupId: appsSecurityGroup.id,
   sourceSecurityGroupId: albSecurityGroup.id,
-  protocol: "tcp",
+   protocol: "-1",
   fromPort: 0, // 0 for all ports
   toPort: 0, // 0 for all ports
   description: "Allow ALB to communicate with apps on any port",
@@ -176,4 +195,13 @@ new ec2.SecurityGroupRule(`${projectName}-${stackName}-alb-http-in`, {
   description: "Allow http traffic to alb",
 });
 
+new ec2.SecurityGroupRule(`${projectName}-${stackName}-alb-out`, {
+  type: "egress",
+  securityGroupId: albSecurityGroup.id,
+  protocol: "-1",
+  fromPort: 0,
+  toPort: 0,
+  cidrBlocks: ["0.0.0.0/0"],
+  description: "Allow http traffic to alb",
+});
 export { clusterSecurityGroup, appsSecurityGroup, albSecurityGroup };

@@ -30,13 +30,13 @@ const appsNodeGroup = new ManagedNodeGroup(
     cluster: cluster,
     nodeRoleArn: eksWorkerRole.role.arn,
     scalingConfig: {
-      desiredSize: appsNodeGroupConfig.desiredCapacity || 3,
+      desiredSize: appsNodeGroupConfig.desiredCapacity || 2,
       minSize: appsNodeGroupConfig.minSize || 1,
       maxSize: appsNodeGroupConfig.maxSize || 7,
     },
     instanceTypes: [appsNodeGroupConfig.instanceType],
 
-    subnetIds: vpc.privateSubnetIds,
+    subnetIds: vpc.publicSubnetIds,
     launchTemplate: {
       id: appsLaunchTemplate.id,
       version: interpolate`${appsLaunchTemplate.latestVersion}`,

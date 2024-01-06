@@ -1,0 +1,16 @@
+{
+  "name": "dasf-infra",
+  "devDependencies": {
+    "@types/node": "^18",
+    "prettier": "3.0"
+  },
+  "dependencies": {
+    "typescript": "^4.0.0",
+    "@pulumi/pulumi": "^3.0.0",
+    "@pulumi/awsx": "^2.0.2",
+    "@pulumi/eks": "^v2.0.0"
+  },
+  "scripts": {
+    "fmt": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,md}\""
+  }
+}

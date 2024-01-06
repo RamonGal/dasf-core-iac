@@ -162,7 +162,7 @@ class EksWorkerRole extends ComponentResource {
             },
             {
               Effect: "Allow",
-              Action: [                
+              Action: [
                 "ec2:DescribeAccountAttributes",
                 "ec2:DescribeAddresses",
                 "ec2:DescribeAvailabilityZones",
@@ -176,14 +176,14 @@ class EksWorkerRole extends ComponentResource {
                 "ec2:DescribeTags",
                 "ec2:GetCoipPoolUsage",
                 "ec2:DescribeCoipPools",
-                "ec2:AuthorizeSecurityGroupIngress", 
+                "ec2:AuthorizeSecurityGroupIngress",
                 "ec2:RevokeSecurityGroupIngress",
                 "ec2:DeleteSecurityGroup",
                 "ec2:RevokeSecurityGroupIngress",
-                "ec2:CreateSecurityGroup"
+                "ec2:CreateSecurityGroup",
               ],
               Resource: "*",
-            }, 
+            },
             {
               Effect: "Allow",
               Action: ["ec2:CreateTags"],
@@ -207,7 +207,40 @@ class EksWorkerRole extends ComponentResource {
                   "aws:ResourceTag/elbv2.k8s.aws/cluster": "false",
                 },
               },
-            }, 
+            },
+          ],
+        },
+      },
+      {
+        parent: this,
+      },
+    );
+
+    const amazonEKSClusterAutoscalerPolicy = new iam.Policy(
+      "AmazonEKSClusterAutoscalerPolicy",
+      {
+        policy: {
+          Version: "2012-10-17",
+          Statement: [
+            {
+              Effect: "Allow",
+              Action: [
+                "autoscaling:DescribeAutoScalingGroups",
+                "autoscaling:DescribeAutoScalingInstances",
+                "autoscaling:DescribeLaunchConfigurations",
+                "autoscaling:DescribeScalingActivities",
+                "autoscaling:DescribeTags",
+                "ec2:DescribeInstanceTypes",
+                "autoscaling:SetDesiredCapacity",
+                "autoscaling:TerminateInstanceInAutoScalingGroup",
+                "ec2:DescribeImages",
+                "ec2:GetInstanceTypesFromInstanceRequirements",
+                "eks:DescribeNodegroup",
+                "ec2:DescribeLaunchTemplateVersions",
+                "sts:AssumeRoleWithWebIdentity"
+              ],
+              Resource: "*",
+            },
           ],
         },
       },
@@ -220,6 +253,15 @@ class EksWorkerRole extends ComponentResource {
       "AlbControllerPolicy",
       {
         policyArn: albControllerPolicy.arn,
+        role: this.role.name,
+      },
+      { parent: this },
+    );
+
+    const amazonEKSClusterAutoscalerPolicyAttach = new iam.RolePolicyAttachment(
+      "AmazonEKSClusterAutoscalerPolicy",
+      {
+        policyArn: amazonEKSClusterAutoscalerPolicy.arn,
         role: this.role.name,
       },
       { parent: this },

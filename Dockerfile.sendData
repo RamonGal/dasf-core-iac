@@ -4,3 +4,5 @@ COPY f3.tar.gz /f3.tar.gz
 
 # decompress the data
 RUN tar -xzf f3.tar.gz
+# remove the compressed file
+RUN rm f3.tar.gz

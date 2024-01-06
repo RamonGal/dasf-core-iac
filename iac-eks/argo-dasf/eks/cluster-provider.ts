@@ -7,19 +7,5 @@ const clusterProvider = new Provider(
     kubeconfig: kubeconfig,
   },
 );
-
-// create a namespace for the cluster
-const clusterNamespace = new core.v1.Namespace(
-  `${projectName}-${stackName}-cluster-namespace`,
-  {
-    metadata: {
-      name: `${projectName}-${stackName}-cluster-namespace`,
-    },
-  },
-  {
-    provider: clusterProvider,
-  },
-);
-
-const clusterNamespaceName = clusterNamespace.metadata.name;
-export { clusterProvider, clusterNamespaceName };
+ 
+export { clusterProvider };

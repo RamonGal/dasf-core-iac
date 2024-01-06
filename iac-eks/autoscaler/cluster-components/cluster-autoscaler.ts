@@ -84,7 +84,7 @@ class ClusterAutoscaler extends ComponentResource {
   }
 }
 
-const createClusterAutoscalerRole = () => {
+const createClusterAutoscalerRole = () : Output<string> => {
   if (!oidcProviderArn || !oidcProviderUrl) {
     throw new Error("no cluster oidc provider");
   }
@@ -92,7 +92,7 @@ const createClusterAutoscalerRole = () => {
   const clusterAutoscalerRole = new ClusterAutoscalerRole(
     `${projectName}-${stackName}-ca-role`,
     {
-      clusterName: clusterName,
+      clusterName: clusterName as Output<string>,
       clusterProvider: clusterProvider,
       clusterNamespace: clusterNamespaceName,
       serviceAccountName: "cluster-autoscaler-sa",
@@ -113,6 +113,8 @@ const createClusterAutoscalerRole = () => {
     labels: appsNodeGroupConfig.labels,
     dependsOn: [clusterAutoscalerRole],
   });
+
+  return clusterAutoscalerRole.serviceAccountName
 };
 
 export { createClusterAutoscalerRole };

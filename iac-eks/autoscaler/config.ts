@@ -27,21 +27,11 @@ const clusterStackName = config.require("clusterStackName");
 const clusterRef = new StackReference(
   `${orgName === "" ? "/" : orgName + "/"}${clusterStackName}/${stackName}`,
 );
-const autoscalerStackName = config.require("autoscalerStackName");
-const autoscalerStackRef = new StackReference(
-  `${orgName === "" ? "/" : orgName + "/"}${autoscalerStackName}/${stackName}`,
-);
-
 // And the following information about the stacks
 const kubeconfig = clusterRef.requireOutput("kubeconfig");
 const clusterName = clusterRef.requireOutput("clusterName");
 const oidcProviderUrl = clusterRef.requireOutput("oidcProviderUrl");
 const oidcProviderArn = clusterRef.requireOutput("oidcProviderArn");
-const appsSecurityGroupId = clusterRef.requireOutput("appsSecurityGroupId");
-
-const clusterNamespaceName = autoscalerStackRef.requireOutput(
-  "clusterNamespaceName",
-);
 
 export {
   projectName,
@@ -50,11 +40,11 @@ export {
   chartVersionDaskOperator,
   chartVersionArgoController,
   oidcProviderUrl,
-  oidcProviderArn,appsSecurityGroupId,
+  oidcProviderArn,
   imageTagClusterAutoscaler,
   appsNodeGroupConfig,
   awsRegion,
-  argoNodePort,clusterNamespaceName,
+  argoNodePort,
   argoServiceName,
   kubeconfig,
   clusterName,

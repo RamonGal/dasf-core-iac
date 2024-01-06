@@ -5,6 +5,9 @@ import {
   Output,
 } from "@pulumi/pulumi";
 import { helm } from "@pulumi/kubernetes";
+import {
+  appsSecurityGroupId,
+} from "../config";
 
 interface ArgoOperatorArgs {
   provider: ProviderResource | undefined;
@@ -31,7 +34,7 @@ class ArgoOperator extends ComponentResource {
     const serviceAccountName = args.serviceAccountName;
     const nodePort = args.nodePort;
     const serviceName = args.serviceName;
-    const chartName = "argo-workflows"
+    const chartName = "argo-workflows";
     const argoChart = new helm.v3.Release(
       `${name}`,
       {
@@ -40,10 +43,14 @@ class ArgoOperator extends ComponentResource {
         repositoryOpts: { repo: "https://argoproj.github.io/argo-helm" },
         version: version,
         values: {
+          
           nodeSelector: labels,
           server: {
+            deploymentAnnotations: {
+            "service.beta.kubernetes.io/aws-load-balancer-security-groups": appsSecurityGroupId
+          },
             name: serviceName,
-            extraArgs: ["--auth-mode=server"], 
+            extraArgs: ["--auth-mode=server"],
           },
           serviceAccount: {
             name: serviceAccountName,
@@ -56,7 +63,9 @@ class ArgoOperator extends ComponentResource {
         parent: this,
       },
     );
-    this.fullname = argoChart.name.apply( (name) => `${name}-${chartName}-${serviceName}`);
+    this.fullname = argoChart.name.apply(
+      (name) => `${name}-${chartName}-${serviceName}`,
+    );
   }
 }
 
