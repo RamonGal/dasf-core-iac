@@ -65,8 +65,11 @@ class ClusterAutoscaler extends ComponentResource {
             serviceAccount: {
               create: false,
               name: serviceAccountName,
-            },
-          },
+              annotations:{
+                "eks.amazonaws.com/role-arn": args.serviceAccountRoleArn,	
+              }
+            }, 
+          }, 
           extraArgs: {
             expander: "least-waste",
             "skip-nodes-with-system-pods": "false",

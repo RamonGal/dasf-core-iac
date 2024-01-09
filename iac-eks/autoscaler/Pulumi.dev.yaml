@@ -13,7 +13,7 @@ config:
   dasf-autoscaler:imageTagClusterAutoscaler: v1.22.2
   dasf-autoscaler:networkStackName: example-network  
   dasf-autoscaler:chartVersionAlbController: 1.4.2
-  dasf-autoscaler:chartVersionClusterAutoscaler: 9.34.1
+  dasf-autoscaler:chartVersionClusterAutoscaler: 9.33.0
   dasf-autoscaler:chartVersionGitLabAgent: 1.2.0
   dasf-autoscaler:chartVersionGitLabRunners: 0.41.0
   dasf-autoscaler:chartVersionMetricsServer: 3.8.2

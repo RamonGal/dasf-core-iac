@@ -53,17 +53,7 @@ new ec2.SecurityGroupRule(`${projectName}-${stackName}-webhook-access-in`, {
   toPort: 9443,
   description: "Allow Kubernetes control plane to access webhook on port 9443",
 });
-
-// Egress Rule: Allow apps to communicate with cluster API
-new ec2.SecurityGroupRule(`${projectName}-${stackName}-apps-cluster-api-out`, {
-  type: "egress",
-  securityGroupId: appsSecurityGroup.id,
-  sourceSecurityGroupId: clusterSecurityGroup.id,
-  protocol: "tcp",
-  fromPort: 443,
-  toPort: 443,
-  description: "Allow apps to communicate with cluster API",
-});
+ 
 
 // Ingress Rule: Allow apps to communicate with coredns TCP
 new ec2.SecurityGroupRule(`${projectName}-${stackName}-apps-coredns-tcp-in`, {
@@ -95,6 +85,35 @@ new ec2.SecurityGroupRule(`${projectName}-${stackName}-apps-https-out`, {
   fromPort: 443,
   toPort: 443,
   cidrBlocks: ["0.0.0.0/0"],
+  description: "Allow apps HTTPS out",
+});
+
+new ec2.SecurityGroupRule(`${projectName}-${stackName}-apps-https-in`, {
+  type: "ingress",
+  securityGroupId: appsSecurityGroup.id,
+  protocol: "tcp",
+  fromPort: 443,
+  toPort: 443,
+  cidrBlocks: [vpc.vpc.cidrBlock],
+  description: "Allow apps HTTPS out",
+});
+
+new ec2.SecurityGroupRule(`${projectName}-${stackName}-cluster-https-out`, {
+  type: "egress",
+  securityGroupId: clusterSecurityGroup.id,
+  protocol: "tcp",
+  fromPort: 443,
+  toPort: 443,
+  cidrBlocks: ["0.0.0.0/0"],
+  description: "Allow apps HTTPS out",
+});
+new ec2.SecurityGroupRule(`${projectName}-${stackName}-cluster-https-in`, {
+  type: "ingress",
+  securityGroupId: clusterSecurityGroup.id,
+  protocol: "tcp",
+  fromPort: 443,
+  toPort: 443,
+  cidrBlocks: [vpc.vpc.cidrBlock],
   description: "Allow apps HTTPS out",
 });
 // Egress Rule: Allow apps HTTPS out
@@ -130,6 +149,8 @@ new ec2.SecurityGroupRule(
     description: "Allow apps to communicate with the cluster API",
   },
 );
+
+
 
 // Egress Rule: Allow cluster to communicate with apps kubelets
 new ec2.SecurityGroupRule(`${projectName}-${stackName}-apps-kubelets-out-tcp`, {

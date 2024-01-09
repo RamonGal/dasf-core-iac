@@ -1,7 +1,6 @@
 import { DaskOperator } from "./dask-operator";
 import { ArgoOperator } from "./argo-operator";
-import { DaskServiceAccount } from "./dask-rbac-role";
-import {createNFSVolume} from "./nfs-volume";
+import { DaskServiceAccount } from "./dask-rbac-role"; 
 import {
   chartVersionDaskOperator,
   chartVersionArgoController,
@@ -11,6 +10,7 @@ import {
 } from "../config";
 import { clusterProvider } from "../eks"; 
 import { Output } from "@pulumi/pulumi";
+import {createNFSVolume} from "./nfs-volume";
 
 const createArgoDasfFramework = () => {
   const daskServiceAccount = new DaskServiceAccount("dask-service-account", {
@@ -38,12 +38,9 @@ const createArgoDasfFramework = () => {
     version: chartVersionArgoController,
     dependsOn: [daskServiceAccount, daskOperator],
   });
-
-  createNFSVolume({
-    namespace: clusterNamespaceName as Output<string>,
-    port: 2049, 
-    provider: clusterProvider,
-  });
+ 
+  createNFSVolume({namespace:clusterNamespaceName as Output<string>, 
+    provider: clusterProvider});
 
   return {
     daskOperator,
@@ -53,4 +50,4 @@ const createArgoDasfFramework = () => {
   };
 };
 
-export { createArgoDasfFramework, createNFSVolume  };
+export { createArgoDasfFramework , createNFSVolume };

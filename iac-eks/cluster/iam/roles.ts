@@ -323,6 +323,40 @@ class EksWorkerRole extends ComponentResource {
         parent: this,
       },
     );
+    
+    // Adding a policy for AWS STS
+    const awsStsPolicy = new iam.Policy(
+      "AWSSTSPolicy",
+      {
+        policy: {
+          Version: "2012-10-17",
+          Statement: [
+            {
+              Effect: "Allow",
+              Action: [
+                "sts:AssumeRole",
+                "sts:AssumeRoleWithWebIdentity",
+                "sts:GetCallerIdentity"
+              ],
+              Resource: "*",
+            },
+          ],
+        },
+      },
+      {
+        parent: this,
+      },
+    );
+
+    // Attach the AWS STS policy to the role
+    new iam.RolePolicyAttachment(
+      "AWSSTSPolicyAttachment",
+      {
+        policyArn: awsStsPolicy.arn,
+        role: this.role.name,
+      },
+      { parent: this },
+    );
   }
 }
 

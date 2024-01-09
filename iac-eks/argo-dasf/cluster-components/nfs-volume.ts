@@ -2,8 +2,7 @@ import * as k8s from '@pulumi/kubernetes';
 import { Output, ProviderResource } from '@pulumi/pulumi';
 
 interface NfsArgs {
-  namespace: Output<string>;
-  port: number; 
+  namespace: Output<string>;  
   provider: ProviderResource | undefined;
 }
 
@@ -20,7 +19,8 @@ export const createNFSVolume = (args: NfsArgs) => {
         backendStorageClass: 'openebs-hostpath' // or your backend storage class name
       }
     }
-  }, { provider: args.provider });
+  }, 
+  { provider: args.provider });
 
   const localpvChart = new k8s.helm.v3.Chart('openebs-localpv', {
     chart: 'localpv-provisioner',
@@ -36,12 +36,13 @@ export const createNFSVolume = (args: NfsArgs) => {
         enabled: false
       }
     }
-  }, { provider: args.provider });
+  }, 
+  { provider: args.provider });
 
  const testNfsPvc = new k8s.core.v1.PersistentVolumeClaim("test-nfs-pvc", {
     metadata: {
         name: "many-nfs-pvc",
-        namespace: args.namespace,
+        namespace: args.namespace ,
     },
     spec: {
         accessModes: ["ReadWriteMany"],
@@ -52,13 +53,14 @@ export const createNFSVolume = (args: NfsArgs) => {
             },
         },
     },
-}, { provider: args.provider });
+}, 
+  { provider: args.provider });
 // make a pod that mounts the nfs volume and sleeps\
 
  const testNfsPod = new k8s.core.v1.Pod("test-nfs-pod", {
     metadata: {
         name: "many-nfs-pod",
-        namespace: args.namespace,
+        namespace: args.namespace ,
     },
     spec: {
         containers: [{
@@ -77,5 +79,6 @@ export const createNFSVolume = (args: NfsArgs) => {
             },
         }],
     },
-  }, { provider: args.provider });
+  }, 
+  { provider: args.provider });
 };

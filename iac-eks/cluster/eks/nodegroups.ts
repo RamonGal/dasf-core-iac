@@ -36,7 +36,7 @@ const appsNodeGroup = new ManagedNodeGroup(
     },
     instanceTypes: [appsNodeGroupConfig.instanceType],
 
-    subnetIds: vpc.publicSubnetIds,
+    subnetIds: vpc.privateSubnetIds,
     launchTemplate: {
       id: appsLaunchTemplate.id,
       version: interpolate`${appsLaunchTemplate.latestVersion}`,
