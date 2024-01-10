@@ -47,7 +47,7 @@ class DaskServiceAccount extends ComponentResource {
               "services",
               "poddisruptionbudgets",
             ],
-            verbs: ["get", "list", "watch", "create", "delete"],
+            verbs: ["get", "list", "watch", "create", "delete", "patch"],
           },
         ],
       },

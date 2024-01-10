@@ -12,26 +12,14 @@ from hera.shared import global_config
 from Utility import get_manifest
 
 global_config.host = (
-    "http://k8s-dasfauto-albingre-fbdb435d02-649557573.us-east-1.elb.amazonaws.com"
+    "http://k8s-dasfclus-albingre-5a93310b79-11017112.us-east-1.elb.amazonaws.com"
 )
 global_config.token = ""
-# Copy token value after "Bearer" from the `argo auth token` command  and argo cli
-# from hera.auth import ArgoCLITokenGenerator
-# global_config.token = ArgoCLITokenGenerator
-
-# to enable token, modify the argo server config in the iac
-# remove:
-# values: {
-#         server: {
-#           extraArgs: ['--auth-mode=server']
-#         }
-#       }
-
 
 config = BaseConfig(
-    namespace="dasf-autoscaler-dev-cluster-namespace",
-    service_account_name="dask-creator-9af354ea",
-    base_image="245983579475.dkr.ecr.us-east-1.amazonaws.com/iac-eks-ecr-repo-repo-f4a9343:v1",
+    namespace="dasf-cluster-namespace",
+    service_account_name="dask-creator-6e697f50",
+    dasf_base_image="245983579475.dkr.ecr.us-east-1.amazonaws.com/dasf-eks-ecr-repo-repo-7e31ce1:v1",
 )
 
 with Workflow(
@@ -47,7 +35,7 @@ with Workflow(
 ) as w:
     sendData = Container(
         name="send-data",
-        image="245983579475.dkr.ecr.us-east-1.amazonaws.com/iac-eks-ecr-repo-repo-f4a9343:v2",
+        image="245983579475.dkr.ecr.us-east-1.amazonaws.com/dasf-eks-ecr-repo-repo-7e31ce1:v2",
         command=["sh", "-c"],
         service_account_name=config.service_account_name,
         args=["cp -r /f3.zarr /shared/"],
@@ -63,8 +51,9 @@ with Workflow(
             models.VolumeMount(name="shared", mount_path="/shared"),
         ],
         manifest=get_manifest(
+            eks=True,
             namespace=config.namespace,
-            image=config.base_image,
+            image=config.dasf_base_image,
             service_account_name=config.service_account_name,
             container_args=[
                 "python",

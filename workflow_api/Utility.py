@@ -1,10 +1,16 @@
 import jinja2
 
 
-def get_manifest(namespace, image, service_account_name, container_args, nfsname):
+def get_manifest(
+    namespace, image, service_account_name, container_args, nfsname, eks=False
+):
     templateLoader = jinja2.FileSystemLoader(searchpath="./")
     templateEnv = jinja2.Environment(loader=templateLoader)
-    template = templateEnv.get_template("dask_job_template_cpu.yml")
+    template = (
+        templateEnv.get_template("dask_job_template_cpu.yml")
+        if not eks
+        else templateEnv.get_template("dask_job_template_cpu_eks.yml")
+    )
 
     formatted_args = "\n            - " + "\n            - ".join(
         [f'"{arg}"' for arg in container_args]

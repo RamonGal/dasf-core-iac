@@ -29,7 +29,7 @@ global_config.token = ""
 config = BaseConfig(
     namespace="example-namespace",
     service_account_name="example-sa",
-    base_image="example-image",
+    dasf_base_image="example-image",
 )
 
 with Workflow(

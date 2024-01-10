@@ -1,15 +1,17 @@
 apiVersion: kubernetes.dask.org/v1
 kind: DaskJob
 metadata:  
-  name: dask-job-2
+  name: dask-job-4
   namespace: {{namespace}}
 spec:
   job:
     spec:
       serviceAccountName: {{serviceAccountName}}
+      nodeSelector:
+        workload: apps
       containers:
         - name: job
-          image:  "{{image}}"
+          image: "{{image}}"
           imagePullPolicy: "IfNotPresent"
           args: {{formatted_args}}
           volumeMounts:
@@ -23,8 +25,10 @@ spec:
   cluster:
     spec:
       worker:
-        replicas: 2
+        replicas: 3
         spec:
+          nodeSelector:
+            workload: apps
           containers:
             - name: worker
               image: "{{image}}"
@@ -45,6 +49,8 @@ spec:
                   value: hello-world # We dont test the value, just the name
       scheduler:
         spec:
+          nodeSelector:
+            workload: apps
           containers:
             - name: scheduler
               image: "{{image}}"
